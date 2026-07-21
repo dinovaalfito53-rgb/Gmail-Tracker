@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Manajemen Akun</title>
+    <title>Ternak Akun Gmail - Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,9 +12,9 @@
             theme: {
                 extend: {
                     colors: {
-                        darkbg: '#0f172a',
-                        cardbg: '#1e293b',
-                        accent: '#3b82f6',
+                        darkbg: '#0b0f19',
+                        cardbg: '#151c2c',
+                        bordercolor: '#222f47',
                     }
                 }
             }
@@ -26,174 +26,215 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- Tesseract.js (OCR untuk Screenshot) -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        /* Custom Glowing Card Borders */
+        .card-verified {
+            border: 1.5px solid rgba(16, 185, 129, 0.4);
+            box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.15);
+        }
+        .card-verified:hover {
+            border-color: rgba(16, 185, 129, 0.8);
+            box-shadow: 0 0 20px 0px rgba(16, 185, 129, 0.25);
+        }
+        .card-sold {
+            border: 1.5px solid rgba(245, 158, 11, 0.4);
+            box-shadow: 0 0 15px -3px rgba(245, 158, 11, 0.15);
+        }
+        .card-sold:hover {
+            border-color: rgba(245, 158, 11, 0.8);
+            box-shadow: 0 0 20px 0px rgba(245, 158, 11, 0.25);
+        }
+        .card-disabled {
+            border: 1.5px solid rgba(244, 63, 94, 0.4);
+            box-shadow: 0 0 15px -3px rgba(244, 63, 94, 0.15);
+        }
+        .card-disabled:hover {
+            border-color: rgba(244, 63, 94, 0.8);
+            box-shadow: 0 0 20px 0px rgba(244, 63, 94, 0.25);
+        }
+        /* Glassmorphism scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+<body class="bg-[#0b0f19] text-slate-100 min-h-screen font-sans flex flex-col justify-between p-4 md:p-6">
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- Header -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between pb-6 border-b border-slate-800 gap-4">
+    <!-- Top Navigation Bar -->
+    <header class="max-w-[1600px] w-full mx-auto bg-[#131927] border border-[#222f47] rounded-2xl px-6 py-4 mb-6 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-xl shadow-lg shadow-blue-500/30">
+                <i data-lucide="mail" class="w-6 h-6 text-white"></i>
+            </div>
             <div>
-                <h1 class="text-2xl font-bold text-white flex items-center gap-2">
-                    <i data-lucide="mail" class="text-blue-500"></i> Account Manager
+                <h1 class="text-xl font-bold text-white tracking-wide flex items-center gap-2">
+                    Ternak Akun Gmail <i data-lucide="pin" class="w-4 h-4 text-blue-400 rotate-45"></i>
                 </h1>
-                <p class="text-sm text-slate-400 mt-1">Kelola dan pantau status daftar akun kamu secara efisien.</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-                <button onclick="toggleModal('modalImport', true)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-medium px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition">
-                    <i data-lucide="file-up" class="w-4 h-4 text-blue-400"></i> Import File / Gambar
-                </button>
-                <button onclick="toggleModal('modalManual', true)" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition shadow-lg shadow-blue-500/20">
-                    <i data-lucide="plus-circle" class="w-4 h-4"></i> Tambah Akun
-                </button>
+                <p class="text-xs text-slate-400">Dashboard Manajemen Akun & Import Otomatis</p>
             </div>
         </div>
 
-        <!-- Summary Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6">
-            <div class="bg-slate-800/60 border border-slate-700/50 p-4 rounded-xl flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-medium text-slate-400 uppercase">Total Akun</p>
-                    <h3 id="count-total" class="text-2xl font-bold text-white mt-1">0</h3>
-                </div>
-                <div class="p-3 bg-blue-500/10 text-blue-400 rounded-lg"><i data-lucide="database"></i></div>
-            </div>
-            <div class="bg-slate-800/60 border border-slate-700/50 p-4 rounded-xl flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-medium text-slate-400 uppercase">Verified</p>
-                    <h3 id="count-verified" class="text-2xl font-bold text-emerald-400 mt-1">0</h3>
-                </div>
-                <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg"><i data-lucide="check-circle"></i></div>
-            </div>
-            <div class="bg-slate-800/60 border border-slate-700/50 p-4 rounded-xl flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-medium text-slate-400 uppercase">Sold</p>
-                    <h3 id="count-sold" class="text-2xl font-bold text-amber-400 mt-1">0</h3>
-                </div>
-                <div class="p-3 bg-amber-500/10 text-amber-400 rounded-lg"><i data-lucide="shopping-cart"></i></div>
-            </div>
-            <div class="bg-slate-800/60 border border-slate-700/50 p-4 rounded-xl flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-medium text-slate-400 uppercase">Disabled</p>
-                    <h3 id="count-disabled" class="text-2xl font-bold text-rose-400 mt-1">0</h3>
-                </div>
-                <div class="p-3 bg-rose-500/10 text-rose-400 rounded-lg"><i data-lucide="x-circle"></i></div>
-            </div>
-        </div>
-
-        <!-- Filter & Search Toolbar -->
-        <div class="bg-slate-800/40 border border-slate-800 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
-            <!-- Filter Buttons -->
-            <div class="flex items-center gap-1 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
-                <button onclick="setFilter('ALL')" id="filter-ALL" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition">Semua</button>
-                <button onclick="setFilter('VERIFIED')" id="filter-VERIFIED" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Verified</button>
-                <button onclick="setFilter('SOLD')" id="filter-SOLD" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Sold</button>
-                <button onclick="setFilter('DISABLED')" id="filter-DISABLED" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Disabled</button>
-            </div>
-
-            <!-- Search Bar -->
-            <div class="relative w-full md:w-64">
+        <!-- Controls -->
+        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+            <div class="relative flex-1 md:w-64">
                 <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" id="searchInput" onkeyup="renderTable()" placeholder="Cari email..." class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                <input type="text" id="searchInput" onkeyup="renderGrid()" placeholder="Cari Gmail..." class="w-full bg-[#0b0f19] border border-[#222f47] rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 transition">
+            </div>
+            <button onclick="toggleModal('modalManual', true)" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 transition shadow-lg shadow-blue-600/30 active:scale-95">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i> ADD ACCOUNTS
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1">
+        
+        <!-- Left Panel: Import Dropzone -->
+        <div class="lg:col-span-3 bg-[#131927] border border-[#222f47] rounded-2xl p-5 shadow-2xl flex flex-col justify-between h-full min-h-[500px]">
+            <div>
+                <h2 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+                    <i data-lucide="upload-cloud" class="w-5 h-5 text-blue-400"></i> Import Center
+                </h2>
+                <p class="text-xs text-slate-400 mb-5">Drag & drop file atau screenshot kamu di bawah ini.</p>
+
+                <!-- Dropzone Box -->
+                <div id="dropzone" class="border-2 border-dashed border-blue-500/40 hover:border-blue-400 bg-blue-500/5 hover:bg-blue-500/10 rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[260px] relative group">
+                    <input type="file" id="fileInput" accept=".xlsx, .xls, .csv, .txt, image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+                    
+                    <div class="p-4 bg-blue-600/10 rounded-2xl text-blue-400 group-hover:scale-110 transition-transform mb-3">
+                        <i data-lucide="file-up" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-sm font-semibold text-slate-200 mb-1">Drag & Drop Gmail List</h3>
+                    <p class="text-[11px] text-slate-400 mb-3">(TXT, Excel, CSV) <br><span class="text-slate-500">OR</span><br> Screenshot (PNG/JPG)</p>
+                    
+                    <span class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium px-4 py-2 rounded-xl transition shadow-md shadow-blue-500/20 pointer-events-none">
+                        Upload File
+                    </span>
+                </div>
+
+                <!-- Processing / Detection Card -->
+                <div id="importStatusBox" class="mt-4 hidden p-4 rounded-xl bg-slate-900 border border-[#222f47] text-xs space-y-2">
+                    <div class="flex items-center gap-2 text-blue-400 font-medium">
+                        <i id="statusIcon" data-lucide="loader" class="w-4 h-4 animate-spin"></i>
+                        <span id="statusMessage">Menganalisis file...</span>
+                    </div>
+                    <div id="detectedCountBox" class="hidden pt-2 border-t border-slate-800 text-slate-300">
+                        <span id="detectedCount" class="font-bold text-emerald-400">0</span> akun terdeteksi.
+                        <button onclick="commitDetectedAccounts()" class="mt-2 w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs py-1.5 rounded-lg font-semibold transition">
+                            Tap to Import Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hint Box -->
+            <div class="mt-6 p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 text-[11px] text-slate-400">
+                <p class="font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> AI Auto OCR Ready
+                </p>
+                Screenshot pesan, catatan, atau tabel akan dibaca secara otomatis untuk mencari alamat Gmail.
             </div>
         </div>
 
-        <!-- Table Container -->
-        <div class="bg-slate-800/50 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-300">
-                    <thead class="bg-slate-800 text-slate-400 uppercase text-xs border-b border-slate-700/50">
-                        <tr>
-                            <th class="px-6 py-4">No</th>
-                            <th class="px-6 py-4">Email</th>
-                            <th class="px-6 py-4">Status</th>
-                            <th class="px-6 py-4 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="accountTableBody" class="divide-y divide-slate-800">
-                        <!-- Dynamic Rows -->
-                    </tbody>
-                </table>
+        <!-- Right Panel: Grid Cards & Filter -->
+        <div class="lg:col-span-9 bg-[#131927] border border-[#222f47] rounded-2xl p-5 shadow-2xl flex flex-col min-h-[500px]">
+            
+            <!-- Filter Tabs -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#222f47] mb-5">
+                <div class="flex items-center gap-2 bg-[#0b0f19] p-1.5 rounded-xl border border-[#222f47]">
+                    <button onclick="setFilter('ALL')" id="filter-ALL" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition shadow-sm">All</button>
+                    <button onclick="setFilter('VERIFIED')" id="filter-VERIFIED" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">Verified</button>
+                    <button onclick="setFilter('SOLD')" id="filter-SOLD" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">Sold</button>
+                    <button onclick="setFilter('DISABLED')" id="filter-DISABLED" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">Disabled</button>
+                </div>
+
+                <div class="text-xs text-slate-400 flex items-center gap-2">
+                    <i data-lucide="layers" class="w-4 h-4 text-slate-500"></i>
+                    <span>Tampilan Grid Card</span>
+                </div>
+            </div>
+
+            <!-- Cards Grid Container -->
+            <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 flex-1">
+                <!-- Cards render dynamically via JavaScript -->
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- Modal Form Tambah Manual -->
-    <div id="modalManual" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6 shadow-2xl relative">
-            <h2 class="text-lg font-bold text-white mb-4">Tambah Akun</h2>
+    <!-- Bottom Status Bar -->
+    <footer class="max-w-[1600px] w-full mx-auto mt-6 bg-[#131927] border border-[#222f47] rounded-xl px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
+        <div class="font-mono text-slate-500">
+            pass default: <span class="text-slate-300">aass1122</span>
+        </div>
+        <div class="flex items-center gap-4 font-semibold">
+            <span>Total: <strong id="stat-total" class="text-white">0</strong></span>
+            <span class="text-slate-600">|</span>
+            <span class="text-emerald-400">Verified: <strong id="stat-verified">0</strong></span>
+            <span class="text-slate-600">|</span>
+            <span class="text-amber-400">Sold: <strong id="stat-sold">0</strong></span>
+            <span class="text-slate-600">|</span>
+            <span class="text-rose-400">Disabled: <strong id="stat-disabled">0</strong></span>
+        </div>
+    </footer>
+
+    <!-- Modal Form Tambah Akun Manual -->
+    <div id="modalManual" class="fixed inset-0 bg-black/70 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="bg-[#131927] border border-[#222f47] rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <h2 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                <i data-lucide="mail-plus" class="text-blue-400"></i> Tambah Akun Gmail
+            </h2>
+            <p class="text-xs text-slate-400 mb-5">Masukkan satu atau beberapa email sekaligus.</p>
+
             <form id="addAccountForm" onsubmit="handleAddAccount(event)">
                 <div class="mb-4">
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Email (Satu atau Banyak)</label>
-                    <textarea id="inputEmail" required rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-blue-500 font-mono" placeholder="Pisahkan dengan baris baru&#10;contoh1@gmail.com&#10;contoh2@gmail.com"></textarea>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1.5">Daftar Gmail</label>
+                    <textarea id="inputEmail" required rows="5" class="w-full bg-[#0b0f19] border border-[#222f47] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500 font-mono" placeholder="giantmoli102@gmail.com&#10;budisanstoso189@gmail.com"></textarea>
                 </div>
                 <div class="mb-6">
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Status Default</label>
-                    <select id="inputStatus" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1.5">Status Initial</label>
+                    <select id="inputStatus" class="w-full bg-[#0b0f19] border border-[#222f47] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
                         <option value="VERIFIED">Verified</option>
                         <option value="SOLD">Sold</option>
                         <option value="DISABLED">Disabled</option>
                     </select>
                 </div>
-                <div class="flex justify-end gap-3">
-                    <button type="button" onclick="toggleModal('modalManual', false)" class="px-4 py-2 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">Batal</button>
-                    <button type="submit" class="px-4 py-2 rounded-lg text-sm bg-blue-600 text-white font-medium hover:bg-blue-500 transition">Simpan</button>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="toggleModal('modalManual', false)" class="px-4 py-2 rounded-xl text-xs text-slate-300 hover:bg-slate-800 transition">Batal</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-xs bg-blue-600 text-white font-semibold hover:bg-blue-500 transition shadow-lg shadow-blue-500/20">Simpan Akun</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Import File / Screenshot -->
-    <div id="modalImport" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full p-6 shadow-2xl relative">
-            <h2 class="text-lg font-bold text-white mb-2">Import dari File atau Screenshot</h2>
-            <p class="text-xs text-slate-400 mb-6">Unggah file Excel (.xlsx, .csv) atau Gambar Screenshot. Teks email akan diekstrak secara otomatis.</p>
-
-            <div class="space-y-4">
-                <!-- Tab Excel -->
-                <div class="border border-slate-700/60 rounded-xl p-4 bg-slate-900/40">
-                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-2 flex items-center gap-2">
-                        <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i> File Excel / CSV
-                    </label>
-                    <input type="file" id="excelInput" accept=".xlsx, .xls, .csv" class="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-slate-200 hover:file:bg-slate-600 cursor-pointer">
-                </div>
-
-                <!-- Tab Screenshot -->
-                <div class="border border-slate-700/60 rounded-xl p-4 bg-slate-900/40">
-                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-2 flex items-center gap-2">
-                        <i data-lucide="image" class="w-4 h-4 text-amber-400"></i> Screenshot / Gambar
-                    </label>
-                    <input type="file" id="imageInput" accept="image/*" class="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-slate-200 hover:file:bg-slate-600 cursor-pointer">
-                </div>
-
-                <!-- Status Import -->
-                <div id="importStatus" class="hidden text-xs p-3 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-2">
-                    <i data-lucide="loader" class="w-4 h-4 animate-spin"></i> <span id="importStatusText">Memproses file...</span>
-                </div>
-            </div>
-
-            <div class="flex justify-end gap-3 mt-6">
-                <button type="button" onclick="toggleModal('modalImport', false)" class="px-4 py-2 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">Tutup</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- JavaScript Application Logic -->
     <script>
-        // Data Sampel
+        // Initial Dataset matching image list
         let accounts = [
             { id: 1, email: "giantmoli102@gmail.com", status: "VERIFIED" },
-            { id: 2, email: "budisanstoso189@gmail.com", status: "VERIFIED" },
-            { id: 3, email: "sitiaisyaahh489@gmail.com", status: "SOLD" },
+            { id: 2, email: "budisanstoso189@gmail.com", status: "SOLD" },
+            { id: 3, email: "sitiaisyaahh489@gmail.com", status: "VERIFIED" },
             { id: 4, email: "aguspratamaa189@gmail.com", status: "DISABLED" },
             { id: 5, email: "dewiilestari088@gmail.com", status: "VERIFIED" }
         ];
 
         let currentFilter = 'ALL';
+        let tempDetectedEmails = [];
 
-        function renderTable() {
-            const tbody = document.getElementById('accountTableBody');
+        function renderGrid() {
+            const container = document.getElementById('cardsGrid');
             const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
-            tbody.innerHTML = '';
+            container.innerHTML = '';
 
             const filteredAccounts = accounts.filter(acc => {
                 const matchesFilter = currentFilter === 'ALL' || acc.status === currentFilter;
@@ -202,37 +243,49 @@
             });
 
             if (filteredAccounts.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-500">Tidak ada data ditemukan.</td></tr>`;
+                container.innerHTML = `
+                    <div class="col-span-full py-16 text-center text-slate-500 flex flex-col items-center justify-center gap-2">
+                        <i data-lucide="inbox" class="w-10 h-10 stroke-1 text-slate-600"></i>
+                        <p class="text-sm">Tidak ada akun Gmail ditemukan.</p>
+                    </div>`;
             } else {
-                filteredAccounts.forEach((acc, index) => {
-                    let statusBadge = '';
+                filteredAccounts.forEach(acc => {
+                    let cardClass = "card-verified";
+                    let badgeHTML = "";
+
                     if (acc.status === 'VERIFIED') {
-                        statusBadge = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-2.5 py-1 rounded-full font-medium inline-flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Verified</span>`;
+                        cardClass = "card-verified";
+                        badgeHTML = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Verified</span>`;
                     } else if (acc.status === 'SOLD') {
-                        statusBadge = `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs px-2.5 py-1 rounded-full font-medium inline-flex items-center gap-1"><i data-lucide="shopping-cart" class="w-3 h-3"></i> Sold</span>`;
+                        cardClass = "card-sold";
+                        badgeHTML = `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> Sold</span>`;
                     } else {
-                        statusBadge = `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs px-2.5 py-1 rounded-full font-medium inline-flex items-center gap-1"><i data-lucide="x-circle" class="w-3 h-3"></i> Disabled</span>`;
+                        cardClass = "card-disabled";
+                        badgeHTML = `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Disabled</span>`;
                     }
 
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-800/30 transition";
-                    tr.innerHTML = `
-                        <td class="px-6 py-4 text-xs text-slate-500">${index + 1}</td>
-                        <td class="px-6 py-4 font-mono font-medium text-slate-200">${acc.email}</td>
-                        <td class="px-6 py-4">
-                            <select onchange="updateStatus(${acc.id}, this.value)" class="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2 py-1 text-slate-300 focus:outline-none">
-                                <option value="VERIFIED" ${acc.status === 'VERIFIED' ? 'selected' : ''}>Verified</option>
-                                <option value="SOLD" ${acc.status === 'SOLD' ? 'selected' : ''}>Sold</option>
-                                <option value="DISABLED" ${acc.status === 'DISABLED' ? 'selected' : ''}>Disabled</option>
-                            </select>
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <button onclick="deleteAccount(${acc.id})" class="text-slate-400 hover:text-rose-400 transition p-1" title="Hapus">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </td>
+                    const card = document.createElement('div');
+                    card.className = `bg-[#101625] rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 ${cardClass}`;
+                    card.innerHTML = `
+                        <div class="mb-4">
+                            <h3 class="font-mono text-sm font-semibold text-slate-100 break-all">${acc.email}</h3>
+                        </div>
+                        <div class="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                            <div>${badgeHTML}</div>
+                            <div class="flex items-center gap-1">
+                                <!-- Quick Status Switch Dropdown -->
+                                <select onchange="updateStatus(${acc.id}, this.value)" class="bg-[#0b0f19] border border-slate-700/60 text-[11px] text-slate-300 rounded-lg px-2 py-1 focus:outline-none">
+                                    <option value="VERIFIED" ${acc.status === 'VERIFIED' ? 'selected' : ''}>Verified</option>
+                                    <option value="SOLD" ${acc.status === 'SOLD' ? 'selected' : ''}>Sold</option>
+                                    <option value="DISABLED" ${acc.status === 'DISABLED' ? 'selected' : ''}>Disabled</option>
+                                </select>
+                                <button onclick="deleteAccount(${acc.id})" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Hapus Akun">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
                     `;
-                    tbody.appendChild(tr);
+                    container.appendChild(card);
                 });
             }
 
@@ -241,10 +294,10 @@
         }
 
         function updateMetrics() {
-            document.getElementById('count-total').innerText = accounts.length;
-            document.getElementById('count-verified').innerText = accounts.filter(a => a.status === 'VERIFIED').length;
-            document.getElementById('count-sold').innerText = accounts.filter(a => a.status === 'SOLD').length;
-            document.getElementById('count-disabled').innerText = accounts.filter(a => a.status === 'DISABLED').length;
+            document.getElementById('stat-total').innerText = accounts.length;
+            document.getElementById('stat-verified').innerText = accounts.filter(a => a.status === 'VERIFIED').length;
+            document.getElementById('stat-sold').innerText = accounts.filter(a => a.status === 'SOLD').length;
+            document.getElementById('stat-disabled').innerText = accounts.filter(a => a.status === 'DISABLED').length;
         }
 
         function setFilter(filter) {
@@ -252,12 +305,12 @@
             ['ALL', 'VERIFIED', 'SOLD', 'DISABLED'].forEach(f => {
                 const btn = document.getElementById(`filter-${f}`);
                 if (f === filter) {
-                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition";
+                    btn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition shadow-sm";
                 } else {
-                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:bg-slate-600 transition";
+                    btn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition";
                 }
             });
-            renderTable();
+            renderGrid();
         }
 
         function toggleModal(modalId, show) {
@@ -275,32 +328,33 @@
             e.preventDefault();
             const rawText = document.getElementById('inputEmail').value;
             const status = document.getElementById('inputStatus').value;
+            const extracted = extractEmails(rawText);
 
-            const extractedEmails = extractEmails(rawText);
-
-            if (extractedEmails.length > 0) {
-                extractedEmails.forEach(email => {
-                    accounts.push({ id: Date.now() + Math.random(), email, status });
+            if (extracted.length > 0) {
+                extracted.forEach(email => {
+                    if (!accounts.some(a => a.email === email)) {
+                        accounts.push({ id: Date.now() + Math.random(), email, status });
+                    }
                 });
                 document.getElementById('addAccountForm').reset();
                 toggleModal('modalManual', false);
-                renderTable();
+                renderGrid();
             } else {
                 alert('Tidak ada alamat email valid yang ditemukan.');
             }
         }
 
         function updateStatus(id, newStatus) {
-            const account = accounts.find(a => a.id === id);
-            if (account) {
-                account.status = newStatus;
-                updateMetrics();
+            const acc = accounts.find(a => a.id === id);
+            if (acc) {
+                acc.status = newStatus;
+                renderGrid();
             }
         }
 
         function deleteAccount(id) {
             accounts = accounts.filter(acc => acc.id !== id);
-            renderTable();
+            renderGrid();
         }
 
         function extractEmails(text) {
@@ -309,99 +363,98 @@
             return matches ? [...new Set(matches)] : [];
         }
 
-        // --- HANDLER EXCEL IMPORT ---
-        document.getElementById('excelInput').addEventListener('change', function(e) {
+        // --- FILE & SCREENSHOT IMPORT PROCESSING ---
+        const fileInput = document.getElementById('fileInput');
+
+        fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
-            if (!file) return;
-
-            showImportStatus(true, "Membaca file Excel...");
-
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                    
-                    const textContent = JSON.stringify(json);
-                    const foundEmails = extractEmails(textContent);
-
-                    if (foundEmails.length > 0) {
-                        foundEmails.forEach(email => {
-                            if (!accounts.some(a => a.email === email)) {
-                                accounts.push({ id: Date.now() + Math.random(), email, status: 'VERIFIED' });
-                            }
-                        });
-                        showImportStatus(false);
-                        toggleModal('modalImport', false);
-                        renderTable();
-                        alert(`Berhasil menambahkan ${foundEmails.length} email dari Excel.`);
-                    } else {
-                        showImportStatus(false);
-                        alert("Tidak ditemukan alamat email valid pada file ini.");
-                    }
-                } catch (err) {
-                    showImportStatus(false);
-                    alert("Gagal membaca file Excel.");
-                }
-            };
-            reader.readAsArrayBuffer(file);
+            if (file) processFile(file);
         });
 
-        // --- HANDLER SCREENSHOT OCR IMPORT ---
-        document.getElementById('imageInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        function processFile(file) {
+            const statusBox = document.getElementById('importStatusBox');
+            const statusMsg = document.getElementById('statusMessage');
+            const countBox = document.getElementById('detectedCountBox');
+            
+            statusBox.classList.remove('hidden');
+            countBox.classList.add('hidden');
+            statusMsg.innerText = `Membaca ${file.name}...`;
 
-            showImportStatus(true, "Memindai teks dari gambar (OCR)...");
-
-            Tesseract.recognize(
-                file,
-                'eng',
-                { logger: m => {
-                    if (m.status === 'recognizing text') {
-                        showImportStatus(true, `Mengekstrak teks: ${Math.round(m.progress * 100)}%`);
-                    }
-                }}
-            ).then(({ data: { text } }) => {
-                const foundEmails = extractEmails(text);
-                if (foundEmails.length > 0) {
-                    foundEmails.forEach(email => {
-                        if (!accounts.some(a => a.email === email)) {
-                            accounts.push({ id: Date.now() + Math.random(), email, status: 'VERIFIED' });
+            if (file.type.startsWith('image/')) {
+                // OCR Processing for Screenshots
+                statusMsg.innerText = "Memindai gambar dengan OCR...";
+                Tesseract.recognize(file, 'eng', {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            statusMsg.innerText = `Memindai teks OCR: ${Math.round(m.progress * 100)}%`;
                         }
-                    });
-                    showImportStatus(false);
-                    toggleModal('modalImport', false);
-                    renderTable();
-                    alert(`Berhasil mengekstrak ${foundEmails.length} email dari gambar.`);
-                } else {
-                    showImportStatus(false);
-                    alert("Tidak ada alamat email yang terdeteksi pada gambar.");
-                }
-            }).catch(err => {
-                showImportStatus(false);
-                alert("Gagal memproses gambar.");
-            });
-        });
-
-        function showImportStatus(show, text = "") {
-            const statusDiv = document.getElementById('importStatus');
-            const statusText = document.getElementById('importStatusText');
-            if (show) {
-                statusText.innerText = text;
-                statusDiv.classList.remove('hidden');
+                    }
+                }).then(({ data: { text } }) => {
+                    handleExtractedText(text);
+                }).catch(err => {
+                    statusMsg.innerText = "Gagal memindai gambar.";
+                });
+            } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+                // Excel Processing
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    try {
+                        const data = new Uint8Array(evt.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                        handleExtractedText(JSON.stringify(json));
+                    } catch (e) {
+                        statusMsg.innerText = "Gagal membaca spreadsheet.";
+                    }
+                };
+                reader.readAsArrayBuffer(file);
             } else {
-                statusDiv.classList.add('hidden');
+                // Plain Text Processing
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    handleExtractedText(evt.target.result);
+                };
+                reader.readAsText(file);
             }
         }
 
-        // Initialize Icons & Table
+        function handleExtractedText(text) {
+            const statusMsg = document.getElementById('statusMessage');
+            const countBox = document.getElementById('detectedCountBox');
+            const countElem = document.getElementById('detectedCount');
+
+            tempDetectedEmails = extractEmails(text);
+
+            if (tempDetectedEmails.length > 0) {
+                statusMsg.innerText = "Proses Selesai!";
+                countElem.innerText = tempDetectedEmails.length;
+                countBox.classList.remove('hidden');
+            } else {
+                statusMsg.innerText = "Tidak ada email terdeteksi.";
+            }
+        }
+
+        function commitDetectedAccounts() {
+            let added = 0;
+            tempDetectedEmails.forEach(email => {
+                if (!accounts.some(a => a.email === email)) {
+                    accounts.push({ id: Date.now() + Math.random(), email, status: 'VERIFIED' });
+                    added++;
+                }
+            });
+
+            document.getElementById('importStatusBox').classList.add('hidden');
+            tempDetectedEmails = [];
+            fileInput.value = '';
+            renderGrid();
+            alert(`Berhasil mengimpor ${added} akun Gmail baru.`);
+        }
+
+        // Initialize App
         window.onload = () => {
             lucide.createIcons();
-            renderTable();
+            renderGrid();
         };
     </script>
 </body>
