@@ -22,6 +22,10 @@
     </script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SheetJS (Excel Parser) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Tesseract.js (OCR untuk Screenshot) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
 
@@ -35,9 +39,14 @@
                 </h1>
                 <p class="text-sm text-slate-400 mt-1">Kelola dan pantau status daftar akun kamu secara efisien.</p>
             </div>
-            <button onclick="toggleModal(true)" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition shadow-lg shadow-blue-500/20">
-                <i data-lucide="plus-circle" class="w-4 h-4"></i> Tambah Akun
-            </button>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="toggleModal('modalImport', true)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-medium px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition">
+                    <i data-lucide="file-up" class="w-4 h-4 text-blue-400"></i> Import File / Gambar
+                </button>
+                <button onclick="toggleModal('modalManual', true)" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition shadow-lg shadow-blue-500/20">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i> Tambah Akun
+                </button>
+            </div>
         </div>
 
         <!-- Summary Cards -->
@@ -95,8 +104,8 @@
                 <table class="w-full text-left text-sm text-slate-300">
                     <thead class="bg-slate-800 text-slate-400 uppercase text-xs border-b border-slate-700/50">
                         <tr>
+                            <th class="px-6 py-4">No</th>
                             <th class="px-6 py-4">Email</th>
-                            <th class="px-6 py-4">Password</th>
                             <th class="px-6 py-4">Status</th>
                             <th class="px-6 py-4 text-right">Aksi</th>
                         </tr>
@@ -109,21 +118,17 @@
         </div>
     </div>
 
-    <!-- Modal Form Tambah Akun -->
-    <div id="accountModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <!-- Modal Form Tambah Manual -->
+    <div id="modalManual" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6 shadow-2xl relative">
-            <h2 class="text-lg font-bold text-white mb-4">Tambah Akun Baru</h2>
+            <h2 class="text-lg font-bold text-white mb-4">Tambah Akun</h2>
             <form id="addAccountForm" onsubmit="handleAddAccount(event)">
                 <div class="mb-4">
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Email</label>
-                    <input type="email" id="inputEmail" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="contoh@gmail.com">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Password</label>
-                    <input type="text" id="inputPassword" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="••••••••">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Email (Satu atau Banyak)</label>
+                    <textarea id="inputEmail" required rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-blue-500 font-mono" placeholder="Pisahkan dengan baris baru&#10;contoh1@gmail.com&#10;contoh2@gmail.com"></textarea>
                 </div>
                 <div class="mb-6">
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Status</label>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Status Default</label>
                     <select id="inputStatus" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
                         <option value="VERIFIED">Verified</option>
                         <option value="SOLD">Sold</option>
@@ -131,19 +136,56 @@
                     </select>
                 </div>
                 <div class="flex justify-end gap-3">
-                    <button type="button" onclick="toggleModal(false)" class="px-4 py-2 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">Batal</button>
+                    <button type="button" onclick="toggleModal('modalManual', false)" class="px-4 py-2 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">Batal</button>
                     <button type="submit" class="px-4 py-2 rounded-lg text-sm bg-blue-600 text-white font-medium hover:bg-blue-500 transition">Simpan</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Modal Import File / Screenshot -->
+    <div id="modalImport" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full p-6 shadow-2xl relative">
+            <h2 class="text-lg font-bold text-white mb-2">Import dari File atau Screenshot</h2>
+            <p class="text-xs text-slate-400 mb-6">Unggah file Excel (.xlsx, .csv) atau Gambar Screenshot. Teks email akan diekstrak secara otomatis.</p>
+
+            <div class="space-y-4">
+                <!-- Tab Excel -->
+                <div class="border border-slate-700/60 rounded-xl p-4 bg-slate-900/40">
+                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-2 flex items-center gap-2">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i> File Excel / CSV
+                    </label>
+                    <input type="file" id="excelInput" accept=".xlsx, .xls, .csv" class="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-slate-200 hover:file:bg-slate-600 cursor-pointer">
+                </div>
+
+                <!-- Tab Screenshot -->
+                <div class="border border-slate-700/60 rounded-xl p-4 bg-slate-900/40">
+                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-2 flex items-center gap-2">
+                        <i data-lucide="image" class="w-4 h-4 text-amber-400"></i> Screenshot / Gambar
+                    </label>
+                    <input type="file" id="imageInput" accept="image/*" class="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-slate-200 hover:file:bg-slate-600 cursor-pointer">
+                </div>
+
+                <!-- Status Import -->
+                <div id="importStatus" class="hidden text-xs p-3 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-2">
+                    <i data-lucide="loader" class="w-4 h-4 animate-spin"></i> <span id="importStatusText">Memproses file...</span>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="toggleModal('modalImport', false)" class="px-4 py-2 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">Tutup</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Data Sampel (Model Dummy)
+        // Data Sampel
         let accounts = [
-            { id: 1, email: "user.demo1@example.com", password: "password123", status: "VERIFIED" },
-            { id: 2, email: "user.demo2@example.com", password: "password123", status: "SOLD" },
-            { id: 3, email: "user.demo3@example.com", password: "password123", status: "DISABLED" }
+            { id: 1, email: "giantmoli102@gmail.com", status: "VERIFIED" },
+            { id: 2, email: "budisanstoso189@gmail.com", status: "VERIFIED" },
+            { id: 3, email: "sitiaisyaahh489@gmail.com", status: "SOLD" },
+            { id: 4, email: "aguspratamaa189@gmail.com", status: "DISABLED" },
+            { id: 5, email: "dewiilestari088@gmail.com", status: "VERIFIED" }
         ];
 
         let currentFilter = 'ALL';
@@ -162,7 +204,7 @@
             if (filteredAccounts.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-500">Tidak ada data ditemukan.</td></tr>`;
             } else {
-                filteredAccounts.forEach(acc => {
+                filteredAccounts.forEach((acc, index) => {
                     let statusBadge = '';
                     if (acc.status === 'VERIFIED') {
                         statusBadge = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-2.5 py-1 rounded-full font-medium inline-flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Verified</span>`;
@@ -175,9 +217,15 @@
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-slate-800/30 transition";
                     tr.innerHTML = `
+                        <td class="px-6 py-4 text-xs text-slate-500">${index + 1}</td>
                         <td class="px-6 py-4 font-mono font-medium text-slate-200">${acc.email}</td>
-                        <td class="px-6 py-4 font-mono text-slate-400">${acc.password}</td>
-                        <td class="px-6 py-4">${statusBadge}</td>
+                        <td class="px-6 py-4">
+                            <select onchange="updateStatus(${acc.id}, this.value)" class="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2 py-1 text-slate-300 focus:outline-none">
+                                <option value="VERIFIED" ${acc.status === 'VERIFIED' ? 'selected' : ''}>Verified</option>
+                                <option value="SOLD" ${acc.status === 'SOLD' ? 'selected' : ''}>Sold</option>
+                                <option value="DISABLED" ${acc.status === 'DISABLED' ? 'selected' : ''}>Disabled</option>
+                            </select>
+                        </td>
                         <td class="px-6 py-4 text-right">
                             <button onclick="deleteAccount(${acc.id})" class="text-slate-400 hover:text-rose-400 transition p-1" title="Hapus">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -212,8 +260,8 @@
             renderTable();
         }
 
-        function toggleModal(show) {
-            const modal = document.getElementById('accountModal');
+        function toggleModal(modalId, show) {
+            const modal = document.getElementById(modalId);
             if (show) {
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
@@ -225,25 +273,129 @@
 
         function handleAddAccount(e) {
             e.preventDefault();
-            const email = document.getElementById('inputEmail').value;
-            const password = document.getElementById('inputPassword').value;
+            const rawText = document.getElementById('inputEmail').value;
             const status = document.getElementById('inputStatus').value;
 
-            accounts.push({
-                id: Date.now(),
-                email,
-                password,
-                status
-            });
+            const extractedEmails = extractEmails(rawText);
 
-            document.getElementById('addAccountForm').reset();
-            toggleModal(false);
-            renderTable();
+            if (extractedEmails.length > 0) {
+                extractedEmails.forEach(email => {
+                    accounts.push({ id: Date.now() + Math.random(), email, status });
+                });
+                document.getElementById('addAccountForm').reset();
+                toggleModal('modalManual', false);
+                renderTable();
+            } else {
+                alert('Tidak ada alamat email valid yang ditemukan.');
+            }
+        }
+
+        function updateStatus(id, newStatus) {
+            const account = accounts.find(a => a.id === id);
+            if (account) {
+                account.status = newStatus;
+                updateMetrics();
+            }
         }
 
         function deleteAccount(id) {
             accounts = accounts.filter(acc => acc.id !== id);
             renderTable();
+        }
+
+        function extractEmails(text) {
+            const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+            const matches = text.match(emailRegex);
+            return matches ? [...new Set(matches)] : [];
+        }
+
+        // --- HANDLER EXCEL IMPORT ---
+        document.getElementById('excelInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showImportStatus(true, "Membaca file Excel...");
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    const textContent = JSON.stringify(json);
+                    const foundEmails = extractEmails(textContent);
+
+                    if (foundEmails.length > 0) {
+                        foundEmails.forEach(email => {
+                            if (!accounts.some(a => a.email === email)) {
+                                accounts.push({ id: Date.now() + Math.random(), email, status: 'VERIFIED' });
+                            }
+                        });
+                        showImportStatus(false);
+                        toggleModal('modalImport', false);
+                        renderTable();
+                        alert(`Berhasil menambahkan ${foundEmails.length} email dari Excel.`);
+                    } else {
+                        showImportStatus(false);
+                        alert("Tidak ditemukan alamat email valid pada file ini.");
+                    }
+                } catch (err) {
+                    showImportStatus(false);
+                    alert("Gagal membaca file Excel.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // --- HANDLER SCREENSHOT OCR IMPORT ---
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showImportStatus(true, "Memindai teks dari gambar (OCR)...");
+
+            Tesseract.recognize(
+                file,
+                'eng',
+                { logger: m => {
+                    if (m.status === 'recognizing text') {
+                        showImportStatus(true, `Mengekstrak teks: ${Math.round(m.progress * 100)}%`);
+                    }
+                }}
+            ).then(({ data: { text } }) => {
+                const foundEmails = extractEmails(text);
+                if (foundEmails.length > 0) {
+                    foundEmails.forEach(email => {
+                        if (!accounts.some(a => a.email === email)) {
+                            accounts.push({ id: Date.now() + Math.random(), email, status: 'VERIFIED' });
+                        }
+                    });
+                    showImportStatus(false);
+                    toggleModal('modalImport', false);
+                    renderTable();
+                    alert(`Berhasil mengekstrak ${foundEmails.length} email dari gambar.`);
+                } else {
+                    showImportStatus(false);
+                    alert("Tidak ada alamat email yang terdeteksi pada gambar.");
+                }
+            }).catch(err => {
+                showImportStatus(false);
+                alert("Gagal memproses gambar.");
+            });
+        });
+
+        function showImportStatus(show, text = "") {
+            const statusDiv = document.getElementById('importStatus');
+            const statusText = document.getElementById('importStatusText');
+            if (show) {
+                statusText.innerText = text;
+                statusDiv.classList.remove('hidden');
+            } else {
+                statusDiv.classList.add('hidden');
+            }
         }
 
         // Initialize Icons & Table
