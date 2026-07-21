@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Manajemen Akun</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b',
+                        accent: '#3b82f6',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between pb-6 border-b border-slate-800 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="mail" class="text-blue-500"></i> Account Manager
+                </h1>
+                <p class="text-sm text-slate-400 mt-1">Kelola dan pantau status daftar akun kamu secara efisien.</p>
+            </div>
+            <button onclick="toggleModal(true)" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition shadow-lg shadow-blue-500/20">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i> Tambah Akun
+            </button>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6">
+            <div class="bg-slate-800/60 border border-slate-700/50 p-4 rounded-xl flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-400 uppercase">Total Akun</p>
+                    <h3 id="count-total" class="text-2xl font-bold text-white mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-blue-500/10 text-blue-400 rounded-lg"><i data-lucide="database"></i></div>
+            </div>
+            <div class="bg-slate-800/60 border border-slate-700/50 p-4 rounded-xl flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-400 uppercase">Verified</p>
+                    <h3 id="count-verified" class="text-2xl font-bold text-emerald-400 mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg"><i data-lucide="check-circle"></i></div>
+            </div>
+            <div class="bg-slate-800/60 border border-slate-700/50 p-4 rounded-xl flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-400 uppercase">Sold</p>
+                    <h3 id="count-sold" class="text-2xl font-bold text-amber-400 mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-amber-500/10 text-amber-400 rounded-lg"><i data-lucide="shopping-cart"></i></div>
+            </div>
+            <div class="bg-slate-800/60 border border-slate-700/50 p-4 rounded-xl flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-400 uppercase">Disabled</p>
+                    <h3 id="count-disabled" class="text-2xl font-bold text-rose-400 mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-rose-500/10 text-rose-400 rounded-lg"><i data-lucide="x-circle"></i></div>
+            </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="bg-slate-800/40 border border-slate-800 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
+            <!-- Filter Buttons -->
+            <div class="flex items-center gap-1 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
+                <button onclick="setFilter('ALL')" id="filter-ALL" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition">Semua</button>
+                <button onclick="setFilter('VERIFIED')" id="filter-VERIFIED" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Verified</button>
+                <button onclick="setFilter('SOLD')" id="filter-SOLD" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Sold</button>
+                <button onclick="setFilter('DISABLED')" id="filter-DISABLED" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Disabled</button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="relative w-full md:w-64">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="searchInput" onkeyup="renderTable()" placeholder="Cari email..." class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+            </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="bg-slate-800/50 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-800 text-slate-400 uppercase text-xs border-b border-slate-700/50">
+                        <tr>
+                            <th class="px-6 py-4">Email</th>
+                            <th class="px-6 py-4">Password</th>
+                            <th class="px-6 py-4">Status</th>
+                            <th class="px-6 py-4 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accountTableBody" class="divide-y divide-slate-800">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Form Tambah Akun -->
+    <div id="accountModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6 shadow-2xl relative">
+            <h2 class="text-lg font-bold text-white mb-4">Tambah Akun Baru</h2>
+            <form id="addAccountForm" onsubmit="handleAddAccount(event)">
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Email</label>
+                    <input type="email" id="inputEmail" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="contoh@gmail.com">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Password</label>
+                    <input type="text" id="inputPassword" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="••••••••">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Status</label>
+                    <select id="inputStatus" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                        <option value="VERIFIED">Verified</option>
+                        <option value="SOLD">Sold</option>
+                        <option value="DISABLED">Disabled</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="toggleModal(false)" class="px-4 py-2 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg text-sm bg-blue-600 text-white font-medium hover:bg-blue-500 transition">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data Sampel (Model Dummy)
+        let accounts = [
+            { id: 1, email: "user.demo1@example.com", password: "password123", status: "VERIFIED" },
+            { id: 2, email: "user.demo2@example.com", password: "password123", status: "SOLD" },
+            { id: 3, email: "user.demo3@example.com", password: "password123", status: "DISABLED" }
+        ];
+
+        let currentFilter = 'ALL';
+
+        function renderTable() {
+            const tbody = document.getElementById('accountTableBody');
+            const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
+            tbody.innerHTML = '';
+
+            const filteredAccounts = accounts.filter(acc => {
+                const matchesFilter = currentFilter === 'ALL' || acc.status === currentFilter;
+                const matchesSearch = acc.email.toLowerCase().includes(searchKeyword);
+                return matchesFilter && matchesSearch;
+            });
+
+            if (filteredAccounts.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-500">Tidak ada data ditemukan.</td></tr>`;
+            } else {
+                filteredAccounts.forEach(acc => {
+                    let statusBadge = '';
+                    if (acc.status === 'VERIFIED') {
+                        statusBadge = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-2.5 py-1 rounded-full font-medium inline-flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Verified</span>`;
+                    } else if (acc.status === 'SOLD') {
+                        statusBadge = `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs px-2.5 py-1 rounded-full font-medium inline-flex items-center gap-1"><i data-lucide="shopping-cart" class="w-3 h-3"></i> Sold</span>`;
+                    } else {
+                        statusBadge = `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs px-2.5 py-1 rounded-full font-medium inline-flex items-center gap-1"><i data-lucide="x-circle" class="w-3 h-3"></i> Disabled</span>`;
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-800/30 transition";
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 font-mono font-medium text-slate-200">${acc.email}</td>
+                        <td class="px-6 py-4 font-mono text-slate-400">${acc.password}</td>
+                        <td class="px-6 py-4">${statusBadge}</td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="deleteAccount(${acc.id})" class="text-slate-400 hover:text-rose-400 transition p-1" title="Hapus">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            updateMetrics();
+            lucide.createIcons();
+        }
+
+        function updateMetrics() {
+            document.getElementById('count-total').innerText = accounts.length;
+            document.getElementById('count-verified').innerText = accounts.filter(a => a.status === 'VERIFIED').length;
+            document.getElementById('count-sold').innerText = accounts.filter(a => a.status === 'SOLD').length;
+            document.getElementById('count-disabled').innerText = accounts.filter(a => a.status === 'DISABLED').length;
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            ['ALL', 'VERIFIED', 'SOLD', 'DISABLED'].forEach(f => {
+                const btn = document.getElementById(`filter-${f}`);
+                if (f === filter) {
+                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:bg-slate-600 transition";
+                }
+            });
+            renderTable();
+        }
+
+        function toggleModal(show) {
+            const modal = document.getElementById('accountModal');
+            if (show) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function handleAddAccount(e) {
+            e.preventDefault();
+            const email = document.getElementById('inputEmail').value;
+            const password = document.getElementById('inputPassword').value;
+            const status = document.getElementById('inputStatus').value;
+
+            accounts.push({
+                id: Date.now(),
+                email,
+                password,
+                status
+            });
+
+            document.getElementById('addAccountForm').reset();
+            toggleModal(false);
+            renderTable();
+        }
+
+        function deleteAccount(id) {
+            accounts = accounts.filter(acc => acc.id !== id);
+            renderTable();
+        }
+
+        // Initialize Icons & Table
+        window.onload = () => {
+            lucide.createIcons();
+            renderTable();
+        };
+    </script>
+</body>
+</html>
