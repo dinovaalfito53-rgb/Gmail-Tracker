@@ -218,244 +218,249 @@
     </div>
 
     <!-- JavaScript Application Logic -->
-    <script>
-        // Initial Dataset matching image list
-        let accounts = [
-            { id: 1, email: "giantmoli102@gmail.com", status: "VERIFIED" },
-            { id: 2, email: "budisanstoso189@gmail.com", status: "SOLD" },
-            { id: 3, email: "sitiaisyaahh489@gmail.com", status: "VERIFIED" },
-            { id: 4, email: "aguspratamaa189@gmail.com", status: "DISABLED" },
-            { id: 5, email: "dewiilestari088@gmail.com", status: "VERIFIED" }
-        ];
+   <script>
+    // 1. Ambil data dari LocalStorage jika ada, jika tidak pakai data awal
+    let accounts = JSON.parse(localStorage.getItem('gmail_accounts')) || [
+        { id: 1, email: "giantmoli102@gmail.com", status: "VERIFIED" },
+        { id: 2, email: "budisanstoso189@gmail.com", status: "SOLD" },
+        { id: 3, email: "sitiaisyaahh489@gmail.com", status: "VERIFIED" },
+        { id: 4, email: "aguspratamaa189@gmail.com", status: "DISABLED" },
+        { id: 5, email: "dewiilestari088@gmail.com", status: "VERIFIED" }
+    ];
 
-        let currentFilter = 'ALL';
-        let tempDetectedEmails = [];
+    let currentFilter = 'ALL';
+    let tempDetectedEmails = [];
 
-        function renderGrid() {
-            const container = document.getElementById('cardsGrid');
-            const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
-            container.innerHTML = '';
+    // Fungsi Pembantu: Simpan perubahan ke LocalStorage
+    function saveAccounts() {
+        localStorage.setItem('gmail_accounts', JSON.stringify(accounts));
+    }
 
-            const filteredAccounts = accounts.filter(acc => {
-                const matchesFilter = currentFilter === 'ALL' || acc.status === currentFilter;
-                const matchesSearch = acc.email.toLowerCase().includes(searchKeyword);
-                return matchesFilter && matchesSearch;
-            });
+    function renderGrid() {
+        const container = document.getElementById('cardsGrid');
+        const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
+        container.innerHTML = '';
 
-            if (filteredAccounts.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full py-16 text-center text-slate-500 flex flex-col items-center justify-center gap-2">
-                        <i data-lucide="inbox" class="w-10 h-10 stroke-1 text-slate-600"></i>
-                        <p class="text-sm">Tidak ada akun Gmail ditemukan.</p>
-                    </div>`;
-            } else {
-                filteredAccounts.forEach(acc => {
-                    let cardClass = "card-verified";
-                    let badgeHTML = "";
-
-                    if (acc.status === 'VERIFIED') {
-                        cardClass = "card-verified";
-                        badgeHTML = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Verified</span>`;
-                    } else if (acc.status === 'SOLD') {
-                        cardClass = "card-sold";
-                        badgeHTML = `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> Sold</span>`;
-                    } else {
-                        cardClass = "card-disabled";
-                        badgeHTML = `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Disabled</span>`;
-                    }
-
-                    const card = document.createElement('div');
-                    card.className = `bg-[#101625] rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 ${cardClass}`;
-                    card.innerHTML = `
-                        <div class="mb-4">
-                            <h3 class="font-mono text-sm font-semibold text-slate-100 break-all">${acc.email}</h3>
-                        </div>
-                        <div class="flex items-center justify-between pt-3 border-t border-slate-800/80">
-                            <div>${badgeHTML}</div>
-                            <div class="flex items-center gap-1">
-                                <!-- Quick Status Switch Dropdown -->
-                                <select onchange="updateStatus(${acc.id}, this.value)" class="bg-[#0b0f19] border border-slate-700/60 text-[11px] text-slate-300 rounded-lg px-2 py-1 focus:outline-none">
-                                    <option value="VERIFIED" ${acc.status === 'VERIFIED' ? 'selected' : ''}>Verified</option>
-                                    <option value="SOLD" ${acc.status === 'SOLD' ? 'selected' : ''}>Sold</option>
-                                    <option value="DISABLED" ${acc.status === 'DISABLED' ? 'selected' : ''}>Disabled</option>
-                                </select>
-                                <button onclick="deleteAccount(${acc.id})" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Hapus Akun">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-            }
-
-            updateMetrics();
-            lucide.createIcons();
-        }
-
-        function updateMetrics() {
-            document.getElementById('stat-total').innerText = accounts.length;
-            document.getElementById('stat-verified').innerText = accounts.filter(a => a.status === 'VERIFIED').length;
-            document.getElementById('stat-sold').innerText = accounts.filter(a => a.status === 'SOLD').length;
-            document.getElementById('stat-disabled').innerText = accounts.filter(a => a.status === 'DISABLED').length;
-        }
-
-        function setFilter(filter) {
-            currentFilter = filter;
-            ['ALL', 'VERIFIED', 'SOLD', 'DISABLED'].forEach(f => {
-                const btn = document.getElementById(`filter-${f}`);
-                if (f === filter) {
-                    btn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition shadow-sm";
-                } else {
-                    btn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition";
-                }
-            });
-            renderGrid();
-        }
-
-        function toggleModal(modalId, show) {
-            const modal = document.getElementById(modalId);
-            if (show) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            } else {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }
-        }
-
-        function handleAddAccount(e) {
-            e.preventDefault();
-            const rawText = document.getElementById('inputEmail').value;
-            const status = document.getElementById('inputStatus').value;
-            const extracted = extractEmails(rawText);
-
-            if (extracted.length > 0) {
-                extracted.forEach(email => {
-                    if (!accounts.some(a => a.email === email)) {
-                        accounts.push({ id: Date.now() + Math.random(), email, status });
-                    }
-                });
-                document.getElementById('addAccountForm').reset();
-                toggleModal('modalManual', false);
-                renderGrid();
-            } else {
-                alert('Tidak ada alamat email valid yang ditemukan.');
-            }
-        }
-
-        function updateStatus(id, newStatus) {
-            const acc = accounts.find(a => a.id === id);
-            if (acc) {
-                acc.status = newStatus;
-                renderGrid();
-            }
-        }
-
-        function deleteAccount(id) {
-            accounts = accounts.filter(acc => acc.id !== id);
-            renderGrid();
-        }
-
-        function extractEmails(text) {
-            const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-            const matches = text.match(emailRegex);
-            return matches ? [...new Set(matches)] : [];
-        }
-
-        // --- FILE & SCREENSHOT IMPORT PROCESSING ---
-        const fileInput = document.getElementById('fileInput');
-
-        fileInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) processFile(file);
+        const filteredAccounts = accounts.filter(acc => {
+            const matchesFilter = currentFilter === 'ALL' || acc.status === currentFilter;
+            const matchesSearch = acc.email.toLowerCase().includes(searchKeyword);
+            return matchesFilter && matchesSearch;
         });
 
-        function processFile(file) {
-            const statusBox = document.getElementById('importStatusBox');
-            const statusMsg = document.getElementById('statusMessage');
-            const countBox = document.getElementById('detectedCountBox');
-            
-            statusBox.classList.remove('hidden');
-            countBox.classList.add('hidden');
-            statusMsg.innerText = `Membaca ${file.name}...`;
+        if (filteredAccounts.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-full py-16 text-center text-slate-500 flex flex-col items-center justify-center gap-2">
+                    <i data-lucide="inbox" class="w-10 h-10 stroke-1 text-slate-600"></i>
+                    <p class="text-sm">Tidak ada akun Gmail ditemukan.</p>
+                </div>`;
+        } else {
+            filteredAccounts.forEach(acc => {
+                let cardClass = "card-verified";
+                let badgeHTML = "";
 
-            if (file.type.startsWith('image/')) {
-                // OCR Processing for Screenshots
-                statusMsg.innerText = "Memindai gambar dengan OCR...";
-                Tesseract.recognize(file, 'eng', {
-                    logger: m => {
-                        if (m.status === 'recognizing text') {
-                            statusMsg.innerText = `Memindai teks OCR: ${Math.round(m.progress * 100)}%`;
-                        }
-                    }
-                }).then(({ data: { text } }) => {
-                    handleExtractedText(text);
-                }).catch(err => {
-                    statusMsg.innerText = "Gagal memindai gambar.";
-                });
-            } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
-                // Excel Processing
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    try {
-                        const data = new Uint8Array(evt.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
-                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                        const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                        handleExtractedText(JSON.stringify(json));
-                    } catch (e) {
-                        statusMsg.innerText = "Gagal membaca spreadsheet.";
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            } else {
-                // Plain Text Processing
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    handleExtractedText(evt.target.result);
-                };
-                reader.readAsText(file);
-            }
+                if (acc.status === 'VERIFIED') {
+                    cardClass = "card-verified";
+                    badgeHTML = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Verified</span>`;
+                } else if (acc.status === 'SOLD') {
+                    cardClass = "card-sold";
+                    badgeHTML = `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> Sold</span>`;
+                } else {
+                    cardClass = "card-disabled";
+                    badgeHTML = `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Disabled</span>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = `bg-[#101625] rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 ${cardClass}`;
+                card.innerHTML = `
+                    <div class="mb-4">
+                        <h3 class="font-mono text-sm font-semibold text-slate-100 break-all">${acc.email}</h3>
+                    </div>
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                        <div>${badgeHTML}</div>
+                        <div class="flex items-center gap-1">
+                            <select onchange="updateStatus(${acc.id}, this.value)" class="bg-[#0b0f19] border border-slate-700/60 text-[11px] text-slate-300 rounded-lg px-2 py-1 focus:outline-none">
+                                <option value="VERIFIED" ${acc.status === 'VERIFIED' ? 'selected' : ''}>Verified</option>
+                                <option value="SOLD" ${acc.status === 'SOLD' ? 'selected' : ''}>Sold</option>
+                                <option value="DISABLED" ${acc.status === 'DISABLED' ? 'selected' : ''}>Disabled</option>
+                            </select>
+                            <button onclick="deleteAccount(${acc.id})" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Hapus Akun">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
         }
 
-        function handleExtractedText(text) {
-            const statusMsg = document.getElementById('statusMessage');
-            const countBox = document.getElementById('detectedCountBox');
-            const countElem = document.getElementById('detectedCount');
+        updateMetrics();
+        lucide.createIcons();
+    }
 
-            tempDetectedEmails = extractEmails(text);
+    function updateMetrics() {
+        document.getElementById('stat-total').innerText = accounts.length;
+        document.getElementById('stat-verified').innerText = accounts.filter(a => a.status === 'VERIFIED').length;
+        document.getElementById('stat-sold').innerText = accounts.filter(a => a.status === 'SOLD').length;
+        document.getElementById('stat-disabled').innerText = accounts.filter(a => a.status === 'DISABLED').length;
+    }
 
-            if (tempDetectedEmails.length > 0) {
-                statusMsg.innerText = "Proses Selesai!";
-                countElem.innerText = tempDetectedEmails.length;
-                countBox.classList.remove('hidden');
+    function setFilter(filter) {
+        currentFilter = filter;
+        ['ALL', 'VERIFIED', 'SOLD', 'DISABLED'].forEach(f => {
+            const btn = document.getElementById(`filter-${f}`);
+            if (f === filter) {
+                btn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition shadow-sm";
             } else {
-                statusMsg.innerText = "Tidak ada email terdeteksi.";
+                btn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition";
             }
-        }
+        });
+        renderGrid();
+    }
 
-        function commitDetectedAccounts() {
-            let added = 0;
-            tempDetectedEmails.forEach(email => {
+    function toggleModal(modalId, show) {
+        const modal = document.getElementById(modalId);
+        if (show) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        } else {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    function handleAddAccount(e) {
+        e.preventDefault();
+        const rawText = document.getElementById('inputEmail').value;
+        const status = document.getElementById('inputStatus').value;
+        const extracted = extractEmails(rawText);
+
+        if (extracted.length > 0) {
+            extracted.forEach(email => {
                 if (!accounts.some(a => a.email === email)) {
-                    accounts.push({ id: Date.now() + Math.random(), email, status: 'VERIFIED' });
-                    added++;
+                    accounts.push({ id: Date.now() + Math.random(), email, status });
                 }
             });
-
-            document.getElementById('importStatusBox').classList.add('hidden');
-            tempDetectedEmails = [];
-            fileInput.value = '';
+            saveAccounts(); // Simpan ke LocalStorage
+            document.getElementById('addAccountForm').reset();
+            toggleModal('modalManual', false);
             renderGrid();
-            alert(`Berhasil mengimpor ${added} akun Gmail baru.`);
+        } else {
+            alert('Tidak ada alamat email valid yang ditemukan.');
         }
+    }
 
-        // Initialize App
-        window.onload = () => {
-            lucide.createIcons();
+    function updateStatus(id, newStatus) {
+        const acc = accounts.find(a => a.id === id);
+        if (acc) {
+            acc.status = newStatus;
+            saveAccounts(); // Simpan ke LocalStorage
             renderGrid();
-        };
-    </script>
+        }
+    }
+
+    function deleteAccount(id) {
+        accounts = accounts.filter(acc => acc.id !== id);
+        saveAccounts(); // Simpan ke LocalStorage
+        renderGrid();
+    }
+
+    function extractEmails(text) {
+        const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+        const matches = text.match(emailRegex);
+        return matches ? [...new Set(matches)] : [];
+    }
+
+    // --- FILE & SCREENSHOT IMPORT PROCESSING ---
+    const fileInput = document.getElementById('fileInput');
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) processFile(file);
+    });
+
+    function processFile(file) {
+        const statusBox = document.getElementById('importStatusBox');
+        const statusMsg = document.getElementById('statusMessage');
+        const countBox = document.getElementById('detectedCountBox');
+        
+        statusBox.classList.remove('hidden');
+        countBox.classList.add('hidden');
+        statusMsg.innerText = `Membaca ${file.name}...`;
+
+        if (file.type.startsWith('image/')) {
+            statusMsg.innerText = "Memindai gambar dengan OCR...";
+            Tesseract.recognize(file, 'eng', {
+                logger: m => {
+                    if (m.status === 'recognizing text') {
+                        statusMsg.innerText = `Memindai teks OCR: ${Math.round(m.progress * 100)}%`;
+                    }
+                }
+            }).then(({ data: { text } }) => {
+                handleExtractedText(text);
+            }).catch(err => {
+                statusMsg.innerText = "Gagal memindai gambar.";
+            });
+        } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    handleExtractedText(JSON.stringify(json));
+                } catch (e) {
+                    statusMsg.innerText = "Gagal membaca spreadsheet.";
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                handleExtractedText(evt.target.result);
+            };
+            reader.readAsText(file);
+        }
+    }
+
+    function handleExtractedText(text) {
+        const statusMsg = document.getElementById('statusMessage');
+        const countBox = document.getElementById('detectedCountBox');
+        const countElem = document.getElementById('detectedCount');
+
+        tempDetectedEmails = extractEmails(text);
+
+        if (tempDetectedEmails.length > 0) {
+            statusMsg.innerText = "Proses Selesai!";
+            countElem.innerText = tempDetectedEmails.length;
+            countBox.classList.remove('hidden');
+        } else {
+            statusMsg.innerText = "Tidak ada email terdeteksi.";
+        }
+    }
+
+    function commitDetectedAccounts() {
+        let added = 0;
+        tempDetectedEmails.forEach(email => {
+            if (!accounts.some(a => a.email === email)) {
+                accounts.push({ id: Date.now() + Math.random(), email, status: 'VERIFIED' });
+                added++;
+            }
+        });
+
+        saveAccounts(); // Simpan ke LocalStorage
+        document.getElementById('importStatusBox').classList.add('hidden');
+        tempDetectedEmails = [];
+        fileInput.value = '';
+        renderGrid();
+        alert(`Berhasil mengimpor ${added} akun Gmail baru.`);
+    }
+
+    // Initialize App
+    window.onload = () => {
+        lucide.createIcons();
+        renderGrid();
+    };
+</script>
 </body>
 </html>
