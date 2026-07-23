@@ -22,51 +22,19 @@
     </script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- SheetJS (Excel Parser) -->
+    <!-- SheetJS & Tesseract -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- Tesseract.js (OCR untuk Screenshot) -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
-        /* Custom Glowing Card Borders */
-        .card-verified {
-            border: 1.5px solid rgba(16, 185, 129, 0.4);
-            box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.15);
-        }
-        .card-verified:hover {
-            border-color: rgba(16, 185, 129, 0.8);
-            box-shadow: 0 0 20px 0px rgba(16, 185, 129, 0.25);
-        }
-        .card-sold {
-            border: 1.5px solid rgba(245, 158, 11, 0.4);
-            box-shadow: 0 0 15px -3px rgba(245, 158, 11, 0.15);
-        }
-        .card-sold:hover {
-            border-color: rgba(245, 158, 11, 0.8);
-            box-shadow: 0 0 20px 0px rgba(245, 158, 11, 0.25);
-        }
-        .card-disabled {
-            border: 1.5px solid rgba(244, 63, 94, 0.4);
-            box-shadow: 0 0 15px -3px rgba(244, 63, 94, 0.15);
-        }
-        .card-disabled:hover {
-            border-color: rgba(244, 63, 94, 0.8);
-            box-shadow: 0 0 20px 0px rgba(244, 63, 94, 0.25);
-        }
-        /* Glassmorphism scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0b0f19;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #1e293b;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #334155;
-        }
+        .card-verified { border: 1.5px solid rgba(16, 185, 129, 0.4); box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.15); }
+        .card-verified:hover { border-color: rgba(16, 185, 129, 0.8); }
+        .card-sold { border: 1.5px solid rgba(245, 158, 11, 0.4); box-shadow: 0 0 15px -3px rgba(245, 158, 11, 0.15); }
+        .card-sold:hover { border-color: rgba(245, 158, 11, 0.8); }
+        .card-disabled { border: 1.5px solid rgba(244, 63, 94, 0.4); box-shadow: 0 0 15px -3px rgba(244, 63, 94, 0.15); }
+        .card-disabled:hover { border-color: rgba(244, 63, 94, 0.8); }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0b0f19; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-[#0b0f19] text-slate-100 min-h-screen font-sans flex flex-col justify-between p-4 md:p-6">
@@ -91,7 +59,13 @@
                 <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
                 <input type="text" id="searchInput" onkeyup="renderGrid()" placeholder="Cari Gmail..." class="w-full bg-[#0b0f19] border border-[#222f47] rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 transition">
             </div>
-            <button onclick="toggleModal('modalManual', true)" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 transition shadow-lg shadow-blue-600/30 active:scale-95">
+            
+            <!-- Tombol Admin Key / Add Account -->
+            <button id="adminBtn" onclick="toggleAdminMode()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-3 py-2.5 rounded-xl flex items-center gap-2 transition border border-slate-700">
+                <i data-lucide="lock" class="w-4 h-4 text-amber-400"></i> <span id="adminBtnText">Admin Access</span>
+            </button>
+
+            <button id="addAccBtn" onclick="toggleModal('modalManual', true)" class="hidden bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 transition shadow-lg shadow-blue-600/30 active:scale-95">
                 <i data-lucide="plus-circle" class="w-4 h-4"></i> ADD ACCOUNTS
             </button>
         </div>
@@ -100,30 +74,24 @@
     <!-- Main Workspace Grid -->
     <main class="max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1">
         
-        <!-- Left Panel: Import Dropzone -->
-        <div class="lg:col-span-3 bg-[#131927] border border-[#222f47] rounded-2xl p-5 shadow-2xl flex flex-col justify-between h-full min-h-[500px]">
+        <!-- Left Panel: Import Dropzone (Khusus Admin) -->
+        <div id="importPanel" class="hidden lg:col-span-3 bg-[#131927] border border-[#222f47] rounded-2xl p-5 shadow-2xl flex-col justify-between h-full min-h-[500px]">
             <div>
                 <h2 class="text-base font-bold text-white mb-1 flex items-center gap-2">
                     <i data-lucide="upload-cloud" class="w-5 h-5 text-blue-400"></i> Import Center
                 </h2>
                 <p class="text-xs text-slate-400 mb-5">Drag & drop file atau screenshot kamu di bawah ini.</p>
 
-                <!-- Dropzone Box -->
                 <div id="dropzone" class="border-2 border-dashed border-blue-500/40 hover:border-blue-400 bg-blue-500/5 hover:bg-blue-500/10 rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[260px] relative group">
                     <input type="file" id="fileInput" accept=".xlsx, .xls, .csv, .txt, image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
-                    
                     <div class="p-4 bg-blue-600/10 rounded-2xl text-blue-400 group-hover:scale-110 transition-transform mb-3">
                         <i data-lucide="file-up" class="w-8 h-8"></i>
                     </div>
                     <h3 class="text-sm font-semibold text-slate-200 mb-1">Drag & Drop Gmail List</h3>
                     <p class="text-[11px] text-slate-400 mb-3">(TXT, Excel, CSV) <br><span class="text-slate-500">OR</span><br> Screenshot (PNG/JPG)</p>
-                    
-                    <span class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium px-4 py-2 rounded-xl transition shadow-md shadow-blue-500/20 pointer-events-none">
-                        Upload File
-                    </span>
+                    <span class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium px-4 py-2 rounded-xl transition pointer-events-none">Upload File</span>
                 </div>
 
-                <!-- Processing / Detection Card -->
                 <div id="importStatusBox" class="mt-4 hidden p-4 rounded-xl bg-slate-900 border border-[#222f47] text-xs space-y-2">
                     <div class="flex items-center gap-2 text-blue-400 font-medium">
                         <i id="statusIcon" data-lucide="loader" class="w-4 h-4 animate-spin"></i>
@@ -138,44 +106,37 @@
                 </div>
             </div>
 
-            <!-- Hint Box -->
             <div class="mt-6 p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 text-[11px] text-slate-400">
                 <p class="font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
                     <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> AI Auto OCR Ready
                 </p>
-                Screenshot pesan, catatan, atau tabel akan dibaca secara otomatis untuk mencari alamat Gmail.
+                Screenshot pesan, catatan, atau tabel akan dibaca secara otomatis.
             </div>
         </div>
 
-        <!-- Right Panel: Grid Cards & Filter -->
-        <div class="lg:col-span-9 bg-[#131927] border border-[#222f47] rounded-2xl p-5 shadow-2xl flex flex-col min-h-[500px]">
-            
-            <!-- Filter Tabs -->
+        <!-- Right Panel: Grid Cards -->
+        <div id="mainPanel" class="lg:col-span-12 bg-[#131927] border border-[#222f47] rounded-2xl p-5 shadow-2xl flex flex-col min-h-[500px]">
             <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#222f47] mb-5">
                 <div class="flex items-center gap-2 bg-[#0b0f19] p-1.5 rounded-xl border border-[#222f47]">
-                    <button onclick="setFilter('ALL')" id="filter-ALL" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition shadow-sm">All</button>
+                    <button onclick="setFilter('ALL')" id="filter-ALL" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition">All</button>
                     <button onclick="setFilter('VERIFIED')" id="filter-VERIFIED" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">Verified</button>
                     <button onclick="setFilter('SOLD')" id="filter-SOLD" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">Sold</button>
                     <button onclick="setFilter('DISABLED')" id="filter-DISABLED" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">Disabled</button>
                 </div>
-
                 <div class="text-xs text-slate-400 flex items-center gap-2">
                     <i data-lucide="layers" class="w-4 h-4 text-slate-500"></i>
                     <span>Tampilan Grid Card</span>
                 </div>
             </div>
 
-            <!-- Cards Grid Container -->
-            <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 flex-1">
-                <!-- Cards render dynamically via JavaScript -->
-            </div>
+            <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 flex-1"></div>
         </div>
     </main>
 
-    <!-- Bottom Status Bar -->
+    <!-- Bottom Status Bar (BERSIH DARI PASS DEFAULT) -->
     <footer class="max-w-[1600px] w-full mx-auto mt-6 bg-[#131927] border border-[#222f47] rounded-xl px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
-        <div class="font-mono text-slate-500">
-            pass default: <span class="text-slate-300">aass1122</span>
+        <div class="font-mono text-xs text-slate-500 flex items-center gap-2">
+            <span id="syncStatus" class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span> Local Storage Active
         </div>
         <div class="flex items-center gap-4 font-semibold">
             <span>Total: <strong id="stat-total" class="text-white">0</strong></span>
@@ -188,7 +149,7 @@
         </div>
     </footer>
 
-    <!-- Modal Form Tambah Akun Manual -->
+    <!-- Modal Form Tambah Akun -->
     <div id="modalManual" class="fixed inset-0 bg-black/70 backdrop-blur-md hidden items-center justify-center p-4 z-50">
         <div class="bg-[#131927] border border-[#222f47] rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
             <h2 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
@@ -199,7 +160,7 @@
             <form id="addAccountForm" onsubmit="handleAddAccount(event)">
                 <div class="mb-4">
                     <label class="block text-xs font-semibold text-slate-300 uppercase mb-1.5">Daftar Gmail</label>
-                    <textarea id="inputEmail" required rows="5" class="w-full bg-[#0b0f19] border border-[#222f47] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500 font-mono" placeholder="giantmoli102@gmail.com&#10;budisanstoso189@gmail.com"></textarea>
+                    <textarea id="inputEmail" required rows="5" class="w-full bg-[#0b0f19] border border-[#222f47] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500 font-mono" placeholder="email1@gmail.com&#10;email2@gmail.com"></textarea>
                 </div>
                 <div class="mb-6">
                     <label class="block text-xs font-semibold text-slate-300 uppercase mb-1.5">Status Initial</label>
@@ -217,66 +178,98 @@
         </div>
     </div>
 
-    <!-- JavaScript Application Logic -->
-   <script>
-    // 1. Ambil data dari LocalStorage jika ada, jika tidak pakai data awal
-    let accounts = JSON.parse(localStorage.getItem('gmail_accounts')) || [
-        { id: 1, email: "giantmoli102@gmail.com", status: "VERIFIED" },
-        { id: 2, email: "budisanstoso189@gmail.com", status: "SOLD" },
-        { id: 3, email: "sitiaisyaahh489@gmail.com", status: "VERIFIED" },
-        { id: 4, email: "aguspratamaa189@gmail.com", status: "DISABLED" },
-        { id: 5, email: "dewiilestari088@gmail.com", status: "VERIFIED" }
-    ];
+    <script>
+        // --- ADMIN SECURITY CONFIGURATION ---
+        const ADMIN_PIN = "1122"; // Ganti dengan PIN rahasia lu sendiri
+        let isAdmin = false;
 
-    let currentFilter = 'ALL';
-    let tempDetectedEmails = [];
+        let accounts = JSON.parse(localStorage.getItem('gmail_accounts')) || [
+            { id: 1, email: "giantmoli102@gmail.com", status: "VERIFIED" },
+            { id: 2, email: "budisanstoso189@gmail.com", status: "SOLD" },
+            { id: 3, email: "sitiaisyaahh489@gmail.com", status: "VERIFIED" }
+        ];
 
-    // Fungsi Pembantu: Simpan perubahan ke LocalStorage
-    function saveAccounts() {
-        localStorage.setItem('gmail_accounts', JSON.stringify(accounts));
-    }
+        let currentFilter = 'ALL';
+        let tempDetectedEmails = [];
 
-    function renderGrid() {
-        const container = document.getElementById('cardsGrid');
-        const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
-        container.innerHTML = '';
+        function saveAccounts() {
+            localStorage.setItem('gmail_accounts', JSON.stringify(accounts));
+        }
 
-        const filteredAccounts = accounts.filter(acc => {
-            const matchesFilter = currentFilter === 'ALL' || acc.status === currentFilter;
-            const matchesSearch = acc.email.toLowerCase().includes(searchKeyword);
-            return matchesFilter && matchesSearch;
-        });
-
-        if (filteredAccounts.length === 0) {
-            container.innerHTML = `
-                <div class="col-span-full py-16 text-center text-slate-500 flex flex-col items-center justify-center gap-2">
-                    <i data-lucide="inbox" class="w-10 h-10 stroke-1 text-slate-600"></i>
-                    <p class="text-sm">Tidak ada akun Gmail ditemukan.</p>
-                </div>`;
-        } else {
-            filteredAccounts.forEach(acc => {
-                let cardClass = "card-verified";
-                let badgeHTML = "";
-
-                if (acc.status === 'VERIFIED') {
-                    cardClass = "card-verified";
-                    badgeHTML = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Verified</span>`;
-                } else if (acc.status === 'SOLD') {
-                    cardClass = "card-sold";
-                    badgeHTML = `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> Sold</span>`;
-                } else {
-                    cardClass = "card-disabled";
-                    badgeHTML = `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Disabled</span>`;
+        function toggleAdminMode() {
+            if (isAdmin) {
+                isAdmin = false;
+                updateAdminUI();
+            } else {
+                const pin = prompt("Masukkan PIN Admin untuk mengedit data:");
+                if (pin === ADMIN_PIN) {
+                    isAdmin = true;
+                    updateAdminUI();
+                } else if (pin !== null) {
+                    alert("PIN Salah!");
                 }
+            }
+        }
 
-                const card = document.createElement('div');
-                card.className = `bg-[#101625] rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 ${cardClass}`;
-                card.innerHTML = `
-                    <div class="mb-4">
-                        <h3 class="font-mono text-sm font-semibold text-slate-100 break-all">${acc.email}</h3>
-                    </div>
-                    <div class="flex items-center justify-between pt-3 border-t border-slate-800/80">
-                        <div>${badgeHTML}</div>
+        function updateAdminUI() {
+            const adminBtnText = document.getElementById('adminBtnText');
+            const addAccBtn = document.getElementById('addAccBtn');
+            const importPanel = document.getElementById('importPanel');
+            const mainPanel = document.getElementById('mainPanel');
+
+            if (isAdmin) {
+                adminBtnText.innerText = "Exit Admin Mode";
+                addAccBtn.classList.remove('hidden');
+                importPanel.classList.remove('hidden');
+                importPanel.classList.add('flex');
+                mainPanel.classList.remove('lg:col-span-12');
+                mainPanel.classList.add('lg:col-span-9');
+            } else {
+                adminBtnText.innerText = "Admin Access";
+                addAccBtn.classList.add('hidden');
+                importPanel.classList.add('hidden');
+                importPanel.classList.remove('flex');
+                mainPanel.classList.remove('lg:col-span-9');
+                mainPanel.classList.add('lg:col-span-12');
+            }
+            renderGrid();
+        }
+
+        function renderGrid() {
+            const container = document.getElementById('cardsGrid');
+            const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
+            container.innerHTML = '';
+
+            const filteredAccounts = accounts.filter(acc => {
+                const matchesFilter = currentFilter === 'ALL' || acc.status === currentFilter;
+                const matchesSearch = acc.email.toLowerCase().includes(searchKeyword);
+                return matchesFilter && matchesSearch;
+            });
+
+            if (filteredAccounts.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-16 text-center text-slate-500 flex flex-col items-center justify-center gap-2">
+                        <i data-lucide="inbox" class="w-10 h-10 stroke-1 text-slate-600"></i>
+                        <p class="text-sm">Tidak ada akun Gmail ditemukan.</p>
+                    </div>`;
+            } else {
+                filteredAccounts.forEach(acc => {
+                    let cardClass = "card-verified";
+                    let badgeHTML = "";
+
+                    if (acc.status === 'VERIFIED') {
+                        cardClass = "card-verified";
+                        badgeHTML = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Verified</span>`;
+                    } else if (acc.status === 'SOLD') {
+                        cardClass = "card-sold";
+                        badgeHTML = `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> Sold</span>`;
+                    } else {
+                        cardClass = "card-disabled";
+                        badgeHTML = `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Disabled</span>`;
+                    }
+
+                    // Tampilkan Opsi Edit HANYA jika dalam mode Admin
+                    const actionControls = isAdmin ? `
                         <div class="flex items-center gap-1">
                             <select onchange="updateStatus(${acc.id}, this.value)" class="bg-[#0b0f19] border border-slate-700/60 text-[11px] text-slate-300 rounded-lg px-2 py-1 focus:outline-none">
                                 <option value="VERIFIED" ${acc.status === 'VERIFIED' ? 'selected' : ''}>Verified</option>
@@ -287,180 +280,161 @@
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
+                    ` : '';
 
-        updateMetrics();
-        lucide.createIcons();
-    }
-
-    function updateMetrics() {
-        document.getElementById('stat-total').innerText = accounts.length;
-        document.getElementById('stat-verified').innerText = accounts.filter(a => a.status === 'VERIFIED').length;
-        document.getElementById('stat-sold').innerText = accounts.filter(a => a.status === 'SOLD').length;
-        document.getElementById('stat-disabled').innerText = accounts.filter(a => a.status === 'DISABLED').length;
-    }
-
-    function setFilter(filter) {
-        currentFilter = filter;
-        ['ALL', 'VERIFIED', 'SOLD', 'DISABLED'].forEach(f => {
-            const btn = document.getElementById(`filter-${f}`);
-            if (f === filter) {
-                btn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition shadow-sm";
-            } else {
-                btn.className = "px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition";
+                    const card = document.createElement('div');
+                    card.className = `bg-[#101625] rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 ${cardClass}`;
+                    card.innerHTML = `
+                        <div class="mb-4">
+                            <h3 class="font-mono text-sm font-semibold text-slate-100 break-all">${acc.email}</h3>
+                        </div>
+                        <div class="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                            <div>${badgeHTML}</div>
+                            ${actionControls}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
             }
-        });
-        renderGrid();
-    }
 
-    function toggleModal(modalId, show) {
-        const modal = document.getElementById(modalId);
-        if (show) {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        } else {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            updateMetrics();
+            lucide.createIcons();
         }
-    }
 
-    function handleAddAccount(e) {
-        e.preventDefault();
-        const rawText = document.getElementById('inputEmail').value;
-        const status = document.getElementById('inputStatus').value;
-        const extracted = extractEmails(rawText);
+        function updateMetrics() {
+            document.getElementById('stat-total').innerText = accounts.length;
+            document.getElementById('stat-verified').innerText = accounts.filter(a => a.status === 'VERIFIED').length;
+            document.getElementById('stat-sold').innerText = accounts.filter(a => a.status === 'SOLD').length;
+            document.getElementById('stat-disabled').innerText = accounts.filter(a => a.status === 'DISABLED').length;
+        }
 
-        if (extracted.length > 0) {
-            extracted.forEach(email => {
-                if (!accounts.some(a => a.email === email)) {
-                    accounts.push({ id: Date.now() + Math.random(), email, status });
-                }
+        function setFilter(filter) {
+            currentFilter = filter;
+            ['ALL', 'VERIFIED', 'SOLD', 'DISABLED'].forEach(f => {
+                const btn = document.getElementById(`filter-${f}`);
+                btn.className = (f === filter) ? "px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition shadow-sm" : "px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition";
             });
-            saveAccounts(); // Simpan ke LocalStorage
-            document.getElementById('addAccountForm').reset();
-            toggleModal('modalManual', false);
-            renderGrid();
-        } else {
-            alert('Tidak ada alamat email valid yang ditemukan.');
-        }
-    }
-
-    function updateStatus(id, newStatus) {
-        const acc = accounts.find(a => a.id === id);
-        if (acc) {
-            acc.status = newStatus;
-            saveAccounts(); // Simpan ke LocalStorage
             renderGrid();
         }
-    }
 
-    function deleteAccount(id) {
-        accounts = accounts.filter(acc => acc.id !== id);
-        saveAccounts(); // Simpan ke LocalStorage
-        renderGrid();
-    }
+        function toggleModal(modalId, show) {
+            const modal = document.getElementById(modalId);
+            if (show) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+            else { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        }
 
-    function extractEmails(text) {
-        const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-        const matches = text.match(emailRegex);
-        return matches ? [...new Set(matches)] : [];
-    }
+        function handleAddAccount(e) {
+            e.preventDefault();
+            const rawText = document.getElementById('inputEmail').value;
+            const status = document.getElementById('inputStatus').value;
+            const extracted = extractEmails(rawText);
 
-    // --- FILE & SCREENSHOT IMPORT PROCESSING ---
-    const fileInput = document.getElementById('fileInput');
-
-    fileInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) processFile(file);
-    });
-
-    function processFile(file) {
-        const statusBox = document.getElementById('importStatusBox');
-        const statusMsg = document.getElementById('statusMessage');
-        const countBox = document.getElementById('detectedCountBox');
-        
-        statusBox.classList.remove('hidden');
-        countBox.classList.add('hidden');
-        statusMsg.innerText = `Membaca ${file.name}...`;
-
-        if (file.type.startsWith('image/')) {
-            statusMsg.innerText = "Memindai gambar dengan OCR...";
-            Tesseract.recognize(file, 'eng', {
-                logger: m => {
-                    if (m.status === 'recognizing text') {
-                        statusMsg.innerText = `Memindai teks OCR: ${Math.round(m.progress * 100)}%`;
+            if (extracted.length > 0) {
+                extracted.forEach(email => {
+                    if (!accounts.some(a => a.email === email)) {
+                        accounts.push({ id: Date.now() + Math.random(), email, status });
                     }
-                }
-            }).then(({ data: { text } }) => {
-                handleExtractedText(text);
-            }).catch(err => {
-                statusMsg.innerText = "Gagal memindai gambar.";
-            });
-        } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
+                });
+                saveAccounts();
+                document.getElementById('addAccountForm').reset();
+                toggleModal('modalManual', false);
+                renderGrid();
+            } else {
+                alert('Tidak ada alamat email valid yang ditemukan.');
+            }
+        }
+
+        function updateStatus(id, newStatus) {
+            const acc = accounts.find(a => a.id === id);
+            if (acc) {
+                acc.status = newStatus;
+                saveAccounts();
+                renderGrid();
+            }
+        }
+
+        function deleteAccount(id) {
+            accounts = accounts.filter(acc => acc.id !== id);
+            saveAccounts();
+            renderGrid();
+        }
+
+        function extractEmails(text) {
+            const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+            const matches = text.match(emailRegex);
+            return matches ? [...new Set(matches)] : [];
+        }
+
+        // --- IMPORT LOGIC ---
+        const fileInput = document.getElementById('fileInput');
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) processFile(file);
+        });
+
+        function processFile(file) {
+            const statusBox = document.getElementById('importStatusBox');
+            const statusMsg = document.getElementById('statusMessage');
+            const countBox = document.getElementById('detectedCountBox');
+            
+            statusBox.classList.remove('hidden');
+            countBox.classList.add('hidden');
+            statusMsg.innerText = `Membaca ${file.name}...`;
+
+            if (file.type.startsWith('image/')) {
+                statusMsg.innerText = "Memindai gambar dengan OCR...";
+                Tesseract.recognize(file, 'eng', {
+                    logger: m => { if (m.status === 'recognizing text') statusMsg.innerText = `Memindai OCR: ${Math.round(m.progress * 100)}%`; }
+                }).then(({ data: { text } }) => { handleExtractedText(text); });
+            } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
                     const data = new Uint8Array(evt.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                    handleExtractedText(JSON.stringify(json));
-                } catch (e) {
-                    statusMsg.innerText = "Gagal membaca spreadsheet.";
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        } else {
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                handleExtractedText(evt.target.result);
-            };
-            reader.readAsText(file);
-        }
-    }
-
-    function handleExtractedText(text) {
-        const statusMsg = document.getElementById('statusMessage');
-        const countBox = document.getElementById('detectedCountBox');
-        const countElem = document.getElementById('detectedCount');
-
-        tempDetectedEmails = extractEmails(text);
-
-        if (tempDetectedEmails.length > 0) {
-            statusMsg.innerText = "Proses Selesai!";
-            countElem.innerText = tempDetectedEmails.length;
-            countBox.classList.remove('hidden');
-        } else {
-            statusMsg.innerText = "Tidak ada email terdeteksi.";
-        }
-    }
-
-    function commitDetectedAccounts() {
-        let added = 0;
-        tempDetectedEmails.forEach(email => {
-            if (!accounts.some(a => a.email === email)) {
-                accounts.push({ id: Date.now() + Math.random(), email, status: 'VERIFIED' });
-                added++;
+                    handleExtractedText(JSON.stringify(XLSX.utils.sheet_to_json(firstSheet, { header: 1 })));
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = function(evt) { handleExtractedText(evt.target.result); };
+                reader.readAsText(file);
             }
-        });
+        }
 
-        saveAccounts(); // Simpan ke LocalStorage
-        document.getElementById('importStatusBox').classList.add('hidden');
-        tempDetectedEmails = [];
-        fileInput.value = '';
-        renderGrid();
-        alert(`Berhasil mengimpor ${added} akun Gmail baru.`);
-    }
+        function handleExtractedText(text) {
+            tempDetectedEmails = extractEmails(text);
+            const statusMsg = document.getElementById('statusMessage');
+            const countBox = document.getElementById('detectedCountBox');
+            if (tempDetectedEmails.length > 0) {
+                statusMsg.innerText = "Proses Selesai!";
+                document.getElementById('detectedCount').innerText = tempDetectedEmails.length;
+                countBox.classList.remove('hidden');
+            } else {
+                statusMsg.innerText = "Tidak ada email terdeteksi.";
+            }
+        }
 
-    // Initialize App
-    window.onload = () => {
-        lucide.createIcons();
-        renderGrid();
-    };
-</script>
+        function commitDetectedAccounts() {
+            let added = 0;
+            tempDetectedEmails.forEach(email => {
+                if (!accounts.some(a => a.email === email)) {
+                    accounts.push({ id: Date.now() + Math.random(), email, status: 'VERIFIED' });
+                    added++;
+                }
+            });
+            saveAccounts();
+            document.getElementById('importStatusBox').classList.add('hidden');
+            tempDetectedEmails = [];
+            fileInput.value = '';
+            renderGrid();
+            alert(`Berhasil mengimpor ${added} akun Gmail baru.`);
+        }
+
+        window.onload = () => {
+            lucide.createIcons();
+            updateAdminUI();
+        };
+    </script>
 </body>
 </html>
