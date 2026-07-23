@@ -57,15 +57,15 @@
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
             <div class="relative flex-1 md:w-64">
                 <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" id="searchInput" onkeyup="window.renderGrid()" placeholder="Cari Gmail..." class="w-full bg-[#0b0f19] border border-[#222f47] rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 transition">
+                <input type="text" id="searchInput" onkeyup="renderGrid()" placeholder="Cari Gmail..." class="w-full bg-[#0b0f19] border border-[#222f47] rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 transition">
             </div>
             
             <!-- Tombol Admin Key / Add Account -->
-            <button id="adminBtn" onclick="window.toggleAdminMode()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-3 py-2.5 rounded-xl flex items-center gap-2 transition border border-slate-700">
+            <button id="adminBtn" onclick="toggleAdminMode()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-3 py-2.5 rounded-xl flex items-center gap-2 transition border border-slate-700">
                 <i data-lucide="lock" class="w-4 h-4 text-amber-400"></i> <span id="adminBtnText">Admin Access</span>
             </button>
 
-            <button id="addAccBtn" onclick="window.toggleModal('modalManual', true)" class="hidden bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 transition shadow-lg shadow-blue-600/30 active:scale-95">
+            <button id="addAccBtn" onclick="toggleModal('modalManual', true)" class="hidden bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 transition shadow-lg shadow-blue-600/30 active:scale-95">
                 <i data-lucide="plus-circle" class="w-4 h-4"></i> ADD ACCOUNTS
             </button>
         </div>
@@ -99,7 +99,7 @@
                     </div>
                     <div id="detectedCountBox" class="hidden pt-2 border-t border-slate-800 text-slate-300">
                         <span id="detectedCount" class="font-bold text-emerald-400">0</span> akun terdeteksi.
-                        <button onclick="window.commitDetectedAccounts()" class="mt-2 w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs py-1.5 rounded-lg font-semibold transition">
+                        <button onclick="commitDetectedAccounts()" class="mt-2 w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs py-1.5 rounded-lg font-semibold transition">
                             Tap to Import Now
                         </button>
                     </div>
@@ -118,10 +118,10 @@
         <div id="mainPanel" class="lg:col-span-12 bg-[#131927] border border-[#222f47] rounded-2xl p-5 shadow-2xl flex flex-col min-h-[500px]">
             <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#222f47] mb-5">
                 <div class="flex items-center gap-2 bg-[#0b0f19] p-1.5 rounded-xl border border-[#222f47]">
-                    <button onclick="window.setFilter('ALL')" id="filter-ALL" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition">All</button>
-                    <button onclick="window.setFilter('VERIFIED')" id="filter-VERIFIED" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">Verified</button>
-                    <button onclick="window.setFilter('SOLD')" id="filter-SOLD" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">Sold</button>
-                    <button onclick="window.setFilter('DISABLED')" id="filter-DISABLED" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">Disabled</button>
+                    <button onclick="setFilter('ALL')" id="filter-ALL" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition">All</button>
+                    <button onclick="setFilter('VERIFIED')" id="filter-VERIFIED" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">Verified</button>
+                    <button onclick="setFilter('SOLD')" id="filter-SOLD" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">Sold</button>
+                    <button onclick="setFilter('DISABLED')" id="filter-DISABLED" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">Disabled</button>
                 </div>
                 <div class="text-xs text-slate-400 flex items-center gap-2">
                     <i data-lucide="layers" class="w-4 h-4 text-slate-500"></i>
@@ -133,10 +133,10 @@
         </div>
     </main>
 
-    <!-- Bottom Status Bar -->
+    <!-- Bottom Status Bar (BERSIH DARI PASS DEFAULT) -->
     <footer class="max-w-[1600px] w-full mx-auto mt-6 bg-[#131927] border border-[#222f47] rounded-xl px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
         <div class="font-mono text-xs text-slate-500 flex items-center gap-2">
-            <span id="syncStatus" class="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> <span id="syncText">Connecting to Firebase...</span>
+            <span id="syncStatus" class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span> Local Storage Active
         </div>
         <div class="flex items-center gap-4 font-semibold">
             <span>Total: <strong id="stat-total" class="text-white">0</strong></span>
@@ -157,7 +157,7 @@
             </h2>
             <p class="text-xs text-slate-400 mb-5">Masukkan satu atau beberapa email sekaligus.</p>
 
-            <form id="addAccountForm" onsubmit="window.handleAddAccount(event)">
+            <form id="addAccountForm" onsubmit="handleAddAccount(event)">
                 <div class="mb-4">
                     <label class="block text-xs font-semibold text-slate-300 uppercase mb-1.5">Daftar Gmail</label>
                     <textarea id="inputEmail" required rows="5" class="w-full bg-[#0b0f19] border border-[#222f47] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500 font-mono" placeholder="email1@gmail.com&#10;email2@gmail.com"></textarea>
@@ -171,95 +171,47 @@
                     </select>
                 </div>
                 <div class="flex justify-end gap-2">
-                    <button type="button" onclick="window.toggleModal('modalManual', false)" class="px-4 py-2 rounded-xl text-xs text-slate-300 hover:bg-slate-800 transition">Batal</button>
+                    <button type="button" onclick="toggleModal('modalManual', false)" class="px-4 py-2 rounded-xl text-xs text-slate-300 hover:bg-slate-800 transition">Batal</button>
                     <button type="submit" class="px-5 py-2 rounded-xl text-xs bg-blue-600 text-white font-semibold hover:bg-blue-500 transition shadow-lg shadow-blue-500/20">Simpan Akun</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- FIREBASE MODULE SCRIPT -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
-        import { 
-            getFirestore, 
-            collection, 
-            onSnapshot, 
-            addDoc, 
-            updateDoc, 
-            deleteDoc, 
-            doc, 
-            serverTimestamp 
-        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBuNEyjOsvd4jvljQdukixe4RmCxnn1VnQ",
-            authDomain: "ternak-7334a.firebaseapp.com",
-            projectId: "ternak-7334a",
-            storageBucket: "ternak-7334a.firebasestorage.app",
-            messagingSenderId: "832161245054",
-            appId: "1:832161245054:web:410f7ae6acf171d6aaf52f",
-            measurementId: "G-VNX6368SG7"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const db = getFirestore(app);
-        const accountsRef = collection(db, "accounts");
-
-        // App States
+    <script>
+        // --- ADMIN SECURITY CONFIGURATION ---
         const ADMIN_PIN = "1122"; // Ganti dengan PIN rahasia lu sendiri
         let isAdmin = false;
-        let accounts = [];
+
+        let accounts = JSON.parse(localStorage.getItem('gmail_accounts')) || [
+            { id: 1, email: "giantmoli102@gmail.com", status: "VERIFIED" },
+            { id: 2, email: "budisanstoso189@gmail.com", status: "SOLD" },
+            { id: 3, email: "sitiaisyaahh489@gmail.com", status: "VERIFIED" }
+        ];
+
         let currentFilter = 'ALL';
         let tempDetectedEmails = [];
 
-        // --- REALTIME FIRESTORE LISTENER ---
-        onSnapshot(accountsRef, (snapshot) => {
-            accounts = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            
-            // Update UI status
-            const syncStatus = document.getElementById('syncStatus');
-            const syncText = document.getElementById('syncText');
-            if (syncStatus && syncText) {
-                syncStatus.className = "inline-block w-2 h-2 rounded-full bg-emerald-500";
-                syncText.innerText = "Firebase Realtime Active";
-            }
-            
-            window.renderGrid();
-        }, (error) => {
-            console.error("Firestore Sync Error:", error);
-            const syncStatus = document.getElementById('syncStatus');
-            const syncText = document.getElementById('syncText');
-            if (syncStatus && syncText) {
-                syncStatus.className = "inline-block w-2 h-2 rounded-full bg-rose-500";
-                syncText.innerText = "Sync Error: Cek Firebase Rules";
-            }
-        });
+        function saveAccounts() {
+            localStorage.setItem('gmail_accounts', JSON.stringify(accounts));
+        }
 
-        // --- EXPOSE FUNCTIONS TO WINDOW OBJECT ---
-        window.toggleAdminMode = function() {
+        function toggleAdminMode() {
             if (isAdmin) {
                 isAdmin = false;
-                window.updateAdminUI();
+                updateAdminUI();
             } else {
                 const pin = prompt("Masukkan PIN Admin untuk mengedit data:");
                 if (pin === ADMIN_PIN) {
                     isAdmin = true;
-                    window.updateAdminUI();
+                    updateAdminUI();
                 } else if (pin !== null) {
                     alert("PIN Salah!");
                 }
             }
-        };
+        }
 
-        window.updateAdminUI = function() {
+        function updateAdminUI() {
             const adminBtnText = document.getElementById('adminBtnText');
             const addAccBtn = document.getElementById('addAccBtn');
             const importPanel = document.getElementById('importPanel');
@@ -280,17 +232,17 @@
                 mainPanel.classList.remove('lg:col-span-9');
                 mainPanel.classList.add('lg:col-span-12');
             }
-            window.renderGrid();
-        };
+            renderGrid();
+        }
 
-        window.renderGrid = function() {
+        function renderGrid() {
             const container = document.getElementById('cardsGrid');
             const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
             container.innerHTML = '';
 
             const filteredAccounts = accounts.filter(acc => {
                 const matchesFilter = currentFilter === 'ALL' || acc.status === currentFilter;
-                const matchesSearch = acc.email && acc.email.toLowerCase().includes(searchKeyword);
+                const matchesSearch = acc.email.toLowerCase().includes(searchKeyword);
                 return matchesFilter && matchesSearch;
             });
 
@@ -316,14 +268,15 @@
                         badgeHTML = `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Disabled</span>`;
                     }
 
+                    // Tampilkan Opsi Edit HANYA jika dalam mode Admin
                     const actionControls = isAdmin ? `
                         <div class="flex items-center gap-1">
-                            <select onchange="window.updateStatus('${acc.id}', this.value)" class="bg-[#0b0f19] border border-slate-700/60 text-[11px] text-slate-300 rounded-lg px-2 py-1 focus:outline-none">
+                            <select onchange="updateStatus(${acc.id}, this.value)" class="bg-[#0b0f19] border border-slate-700/60 text-[11px] text-slate-300 rounded-lg px-2 py-1 focus:outline-none">
                                 <option value="VERIFIED" ${acc.status === 'VERIFIED' ? 'selected' : ''}>Verified</option>
                                 <option value="SOLD" ${acc.status === 'SOLD' ? 'selected' : ''}>Sold</option>
                                 <option value="DISABLED" ${acc.status === 'DISABLED' ? 'selected' : ''}>Disabled</option>
                             </select>
-                            <button onclick="window.deleteAccount('${acc.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Hapus Akun">
+                            <button onclick="deleteAccount(${acc.id})" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Hapus Akun">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
@@ -344,93 +297,82 @@
                 });
             }
 
-            window.updateMetrics();
-            if (window.lucide) window.lucide.createIcons();
-        };
+            updateMetrics();
+            lucide.createIcons();
+        }
 
-        window.updateMetrics = function() {
+        function updateMetrics() {
             document.getElementById('stat-total').innerText = accounts.length;
             document.getElementById('stat-verified').innerText = accounts.filter(a => a.status === 'VERIFIED').length;
             document.getElementById('stat-sold').innerText = accounts.filter(a => a.status === 'SOLD').length;
             document.getElementById('stat-disabled').innerText = accounts.filter(a => a.status === 'DISABLED').length;
-        };
+        }
 
-        window.setFilter = function(filter) {
+        function setFilter(filter) {
             currentFilter = filter;
             ['ALL', 'VERIFIED', 'SOLD', 'DISABLED'].forEach(f => {
                 const btn = document.getElementById(`filter-${f}`);
-                if (btn) {
-                    btn.className = (f === filter) ? "px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition shadow-sm" : "px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition";
-                }
+                btn.className = (f === filter) ? "px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition shadow-sm" : "px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition";
             });
-            window.renderGrid();
-        };
+            renderGrid();
+        }
 
-        window.toggleModal = function(modalId, show) {
+        function toggleModal(modalId, show) {
             const modal = document.getElementById(modalId);
             if (show) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
             else { modal.classList.add('hidden'); modal.classList.remove('flex'); }
-        };
+        }
 
-        window.handleAddAccount = async function(e) {
+        function handleAddAccount(e) {
             e.preventDefault();
             const rawText = document.getElementById('inputEmail').value;
             const status = document.getElementById('inputStatus').value;
-            const extracted = window.extractEmails(rawText);
+            const extracted = extractEmails(rawText);
 
             if (extracted.length > 0) {
-                for (const email of extracted) {
+                extracted.forEach(email => {
                     if (!accounts.some(a => a.email === email)) {
-                        await addDoc(accountsRef, {
-                            email: email,
-                            status: status,
-                            createdAt: serverTimestamp()
-                        });
+                        accounts.push({ id: Date.now() + Math.random(), email, status });
                     }
-                }
+                });
+                saveAccounts();
                 document.getElementById('addAccountForm').reset();
-                window.toggleModal('modalManual', false);
+                toggleModal('modalManual', false);
+                renderGrid();
             } else {
                 alert('Tidak ada alamat email valid yang ditemukan.');
             }
-        };
+        }
 
-        window.updateStatus = async function(id, newStatus) {
-            try {
-                const accountDoc = doc(db, "accounts", id);
-                await updateDoc(accountDoc, { status: newStatus });
-            } catch (err) {
-                console.error("Gagal update status:", err);
+        function updateStatus(id, newStatus) {
+            const acc = accounts.find(a => a.id === id);
+            if (acc) {
+                acc.status = newStatus;
+                saveAccounts();
+                renderGrid();
             }
-        };
+        }
 
-        window.deleteAccount = async function(id) {
-            if (confirm("Yakin ingin menghapus akun ini?")) {
-                try {
-                    const accountDoc = doc(db, "accounts", id);
-                    await deleteDoc(accountDoc);
-                } catch (err) {
-                    console.error("Gagal hapus akun:", err);
-                }
-            }
-        };
+        function deleteAccount(id) {
+            accounts = accounts.filter(acc => acc.id !== id);
+            saveAccounts();
+            renderGrid();
+        }
 
-        window.extractEmails = function(text) {
+        function extractEmails(text) {
             const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
             const matches = text.match(emailRegex);
             return matches ? [...new Set(matches)] : [];
-        };
+        }
 
         // --- IMPORT LOGIC ---
         const fileInput = document.getElementById('fileInput');
-        if (fileInput) {
-            fileInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) window.processFile(file);
-            });
-        }
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) processFile(file);
+        });
 
-        window.processFile = function(file) {
+        function processFile(file) {
             const statusBox = document.getElementById('importStatusBox');
             const statusMsg = document.getElementById('statusMessage');
             const countBox = document.getElementById('detectedCountBox');
@@ -443,25 +385,25 @@
                 statusMsg.innerText = "Memindai gambar dengan OCR...";
                 Tesseract.recognize(file, 'eng', {
                     logger: m => { if (m.status === 'recognizing text') statusMsg.innerText = `Memindai OCR: ${Math.round(m.progress * 100)}%`; }
-                }).then(({ data: { text } }) => { window.handleExtractedText(text); });
+                }).then(({ data: { text } }) => { handleExtractedText(text); });
             } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
                 const reader = new FileReader();
                 reader.onload = function(evt) {
                     const data = new Uint8Array(evt.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    window.handleExtractedText(JSON.stringify(XLSX.utils.sheet_to_json(firstSheet, { header: 1 })));
+                    handleExtractedText(JSON.stringify(XLSX.utils.sheet_to_json(firstSheet, { header: 1 })));
                 };
                 reader.readAsArrayBuffer(file);
             } else {
                 const reader = new FileReader();
-                reader.onload = function(evt) { window.handleExtractedText(evt.target.result); };
+                reader.onload = function(evt) { handleExtractedText(evt.target.result); };
                 reader.readAsText(file);
             }
-        };
+        }
 
-        window.handleExtractedText = function(text) {
-            tempDetectedEmails = window.extractEmails(text);
+        function handleExtractedText(text) {
+            tempDetectedEmails = extractEmails(text);
             const statusMsg = document.getElementById('statusMessage');
             const countBox = document.getElementById('detectedCountBox');
             if (tempDetectedEmails.length > 0) {
@@ -471,28 +413,28 @@
             } else {
                 statusMsg.innerText = "Tidak ada email terdeteksi.";
             }
-        };
+        }
 
-        window.commitDetectedAccounts = async function() {
+        function commitDetectedAccounts() {
             let added = 0;
-            for (const email of tempDetectedEmails) {
+            tempDetectedEmails.forEach(email => {
                 if (!accounts.some(a => a.email === email)) {
-                    await addDoc(accountsRef, {
-                        email: email,
-                        status: 'VERIFIED',
-                        createdAt: serverTimestamp()
-                    });
+                    accounts.push({ id: Date.now() + Math.random(), email, status: 'VERIFIED' });
                     added++;
                 }
-            }
+            });
+            saveAccounts();
             document.getElementById('importStatusBox').classList.add('hidden');
             tempDetectedEmails = [];
-            if (fileInput) fileInput.value = '';
-            alert(`Berhasil mengimpor ${added} akun Gmail baru ke Firebase.`);
-        };
+            fileInput.value = '';
+            renderGrid();
+            alert(`Berhasil mengimpor ${added} akun Gmail baru.`);
+        }
 
-        // Initial setup
-        window.updateAdminUI();
+        window.onload = () => {
+            lucide.createIcons();
+            updateAdminUI();
+        };
     </script>
 </body>
 </html>
